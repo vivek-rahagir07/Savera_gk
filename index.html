@@ -1,1179 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class 8 GK Master - 6 Test Series</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Custom Scrollbar for dark theme */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111827; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
-        
-        .cursor-wait { cursor: wait; }
+    <title>Face Attendance System</title>
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+    <!-- Face API JS (Global Script) -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-        .animate-slideIn { animation: slideInRight 0.4s ease-out forwards; }
-        
-        .btn-hover-effect { transition: all 0.2s ease; }
-        .btn-hover-effect:active { transform: scale(0.95); }
-    </style>
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-900 text-gray-100 overflow-x-hidden">
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+<body>
 
-        // --- Icons ---
-        const Icon = ({ children, className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                {children}
-            </svg>
-        );
+    <!-- 1. Workspace Portal (The Gate) -->
+    <div id="view-portal" class="portal-container">
+        <div class="portal-card">
+            <h1>Face Attendance</h1>
+            <p>Select your workspace to continue</p>
 
-        const BookOpen = ({ className }) => <Icon className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Icon>;
-        const Award = ({ className }) => <Icon className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></Icon>;
-        const Clock = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Icon>;
-        const ArrowRight = ({ className }) => <Icon className={className}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></Icon>;
-        const ArrowLeft = ({ className }) => <Icon className={className}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></Icon>;
-        const CheckCircle = ({ className }) => <Icon className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
-        const XCircle = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></Icon>;
-        const RefreshCw = ({ className }) => <Icon className={className}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></Icon>;
-        const Home = ({ className }) => <Icon className={className}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
-        const Brain = ({ className }) => <Icon className={className}><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></Icon>;
-        const Trophy = ({ className }) => <Icon className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17"/><path d="M14 14.66V17"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/><path d="M10 22v-5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v5"/></Icon>;
-        const ChevronRight = ({ className }) => <Icon className={className}><polyline points="9 18 15 12 9 6"/></Icon>;
-        const ChevronLeft = ({ className }) => <Icon className={className}><polyline points="15 18 9 12 15 6"/></Icon>;
-        const Timer = ({ className }) => <Icon className={className}><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></Icon>;
-        const Languages = ({ className }) => <Icon className={className}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></Icon>;
-        const History = ({ className }) => <Icon className={className}><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></Icon>;
-        const Eye = ({ className }) => <Icon className={className}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Icon>;
+            <div class="portal-tabs">
+                <button id="tab-join" class="portal-tab active">Join Workspace</button>
+                <button id="tab-create" class="portal-tab">Create New</button>
+            </div>
 
-        const GKQuizApp = () => {
-            const [currentView, setCurrentView] = useState('home');
-            const [activeTestId, setActiveTestId] = useState(null);
-            const [userAnswers, setUserAnswers] = useState({});
-            const [showReview, setShowReview] = useState(false);
-            const [score, setScore] = useState(0);
-            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-            const [timeLeft, setTimeLeft] = useState(45);
-            const [language, setLanguage] = useState('en');
-            const [testHistory, setTestHistory] = useState([]);
-
-            const answersRef = useRef(userAnswers);
-
-            // --- Background Animation Logic ---
-            useEffect(() => {
-                const canvas = document.getElementById('bg-canvas');
-                if (!canvas) return;
-                const ctx = canvas.getContext('2d');
-                let width, height;
-                let animId;
-                
-                // 3D Sphere Config
-                const particleCount = 60; 
-                let sphereRadius = 200;
-                const particles = [];
-                let angleX = 0;
-                let angleY = 0;
-
-                // Fibonacci Sphere Algorithm
-                const phi = Math.PI * (3 - Math.sqrt(5)); 
-                for (let i = 0; i < particleCount; i++) {
-                    const y = 1 - (i / (particleCount - 1)) * 2; 
-                    const radius = Math.sqrt(1 - y * y); 
-                    const theta = phi * i; 
-                    const x = Math.cos(theta) * radius;
-                    const z = Math.sin(theta) * radius;
-                    particles.push({ x, y, z }); 
-                }
-
-                const resize = () => {
-                    width = window.innerWidth;
-                    height = window.innerHeight;
-                    canvas.width = width;
-                    canvas.height = height;
-                    // Adjusted radius relative to window size
-                    sphereRadius = Math.min(width, height) * 0.25; 
-                    if(width < 768) sphereRadius = Math.min(width, height) * 0.35; 
-                };
-                window.addEventListener('resize', resize);
-                resize();
-
-                const animate = () => {
-                    ctx.clearRect(0, 0, width, height);
-                    
-                    const cx = width / 2;
-                    const cy = height / 2;
-
-                    // Slow rotation
-                    angleY += 0.001;
-                    angleX += 0.0005;
-
-                    const cosY = Math.cos(angleY);
-                    const sinY = Math.sin(angleY);
-                    const cosX = Math.cos(angleX);
-                    const sinX = Math.sin(angleX);
-
-                    const projected = [];
-
-                    // Calculate positions
-                    particles.forEach(p => {
-                        const sx = p.x * sphereRadius;
-                        const sy = p.y * sphereRadius;
-                        const sz = p.z * sphereRadius;
-
-                        let rx = sx * cosY - sz * sinY;
-                        let rz = sz * cosY + sx * sinY;
-                        let ry = sy * cosX - rz * sinX;
-                        rz = rz * cosX + sy * sinX;
-
-                        const perspective = 800;
-                        const scale = perspective / (perspective + rz); 
-                        const px = rx * scale + cx;
-                        const py = ry * scale + cy;
-                        
-                        projected.push({ x: px, y: py, z: rz, ox: rx, oy: ry, oz: rz, scale });
-                    });
-
-                    // Draw Connections
-                    ctx.lineWidth = 1;
-                    for (let i = 0; i < projected.length; i++) {
-                        for (let j = i + 1; j < projected.length; j++) {
-                            const p1 = projected[i];
-                            const p2 = projected[j];
-                            
-                            const dx = p1.ox - p2.ox;
-                            const dy = p1.oy - p2.oy;
-                            const dz = p1.oz - p2.oz;
-                            const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
-                            const threshold = sphereRadius * 0.6; 
-
-                            if (dist < threshold) {
-                                const depthAlpha = (p1.scale + p2.scale) / 2; 
-                                const alpha = Math.max(0.02, (1 - (dist / threshold)) * depthAlpha * 0.2); 
-                                ctx.strokeStyle = `rgba(6, 182, 212, ${alpha})`;
-                                ctx.beginPath();
-                                ctx.moveTo(p1.x, p1.y);
-                                ctx.lineTo(p2.x, p2.y);
-                                ctx.stroke();
-                            }
-                        }
-                    }
-
-                    // Draw Nodes - Matched to line style (no blink)
-                    projected.forEach(p => {
-                        const alpha = Math.max(0.05, (p.scale - 0.5) * 0.3); // Consistent fade with depth
-                        ctx.fillStyle = `rgba(34, 211, 238, ${alpha})`; // Flat Cyan
-                        const size = 2 * p.scale; 
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-
-                    animId = requestAnimationFrame(animate);
-                };
-                
-                animId = requestAnimationFrame(animate);
-                
-                return () => {
-                    window.removeEventListener('resize', resize);
-                    cancelAnimationFrame(animId);
-                };
-            }, []);
-
-            useEffect(() => {
-                answersRef.current = userAnswers;
-            }, [userAnswers]);
-
-            useEffect(() => {
-                const savedHistory = localStorage.getItem('gk_app_history');
-                if (savedHistory) {
-                    try {
-                        setTestHistory(JSON.parse(savedHistory));
-                    } catch (e) {
-                        console.error("Failed to parse history", e);
-                    }
-                }
-            }, []);
-
-            const t = (en, hi) => (language === 'hi' && hi ? hi : en);
-
-            const labels = {
-                title: { en: "GK CLASS 8 MASTER", hi: "कक्षा 8 सामान्य ज्ञान मास्टर" },
-                subtitle: { en: "Dominate your exams with our specialized question bank", hi: "विशेष प्रश्न बैंक के साथ अपनी परीक्षाओं में महारत हासिल करें" },
-                startTest: { en: "Start Test", hi: "टेस्ट शुरू करें" },
-                mins: { en: "Mins", hi: "मिनट" },
-                questions: { en: "Questions", hi: "प्रश्न" },
-                whyPractice: { en: "WHY PRACTICE HERE?", hi: "यहाँ अभ्यास क्यों करें?" },
-                feature1: { en: "Covers latest 2024-25 Current Affairs", hi: "नवीनतम 2024-25 करंट अफेयर्स शामिल" },
-                feature2: { en: "Important Science & Geography topics", hi: "महत्वपूर्ण विज्ञान और भूगोल विषय" },
-                feature3: { en: "Instant Score & Detailed Review", hi: "तत्काल स्कोर और विस्तृत समीक्षा" },
-                feature4: { en: "Bilingual (English & Hindi) Support", hi: "द्विभाषी (अंग्रेजी और हिंदी) समर्थन" },
-                question: { en: "Question", hi: "प्रश्न" },
-                completed: { en: "Completed", hi: "पूरा हुआ" },
-                previous: { en: "Previous", hi: "पिछला" },
-                next: { en: "Next", hi: "अगला" },
-                finish: { en: "Finish Test", hi: "टेस्ट समाप्त करें" },
-                testCompleted: { en: "Test Completed!", hi: "टेस्ट पूरा हुआ!" },
-                summary: { en: "Performance Summary for", hi: "प्रदर्शन सारांश:" },
-                correct: { en: "Correct", hi: "सही" },
-                total: { en: "Total", hi: "कुल" },
-                score: { en: "Score", hi: "स्कोर" },
-                backHome: { en: "Back to Home", hi: "होम पर वापस जाएँ" },
-                review: { en: "Review Answers", hi: "उत्तर देखें" },
-                retake: { en: "Retake Test", hi: "फिर से टेस्ट लें" },
-                answerKey: { en: "Answer Key", hi: "उत्तर कुंजी" },
-                backScore: { en: "Back to Score", hi: "स्कोर पर वापस" },
-                yourAns: { en: "Your Answer", hi: "आपका उत्तर" },
-                correctAns: { en: "Correct Answer", hi: "सही उत्तर" },
-                returnDash: { en: "Return to Dashboard", hi: "डैशबोर्ड पर लौटें" },
-                exit: { en: "Exit", hi: "बाहर निकलें" },
-                myScoreBook: { en: "My Score Book", hi: "मेरी स्कोर बुक" },
-                noHistory: { en: "No tests attempted yet.", hi: "अभी तक कोई टेस्ट नहीं दिया गया है।" },
-                attemptedOn: { en: "Attempted on", hi: "दिनांक" },
-                viewAnalysis: { en: "Review / Analysis", hi: "समीक्षा / विश्लेषण" },
-                scoreBookTitle: { en: "Student Score Book", hi: "छात्र स्कोर बुक" }
-            };
-
-            const generateQuestions = (startId, list) => list.map((item, idx) => ({ id: startId + idx, ...item }));
-
-            const tests = {
-                test1: {
-                    title: "Test 1: Science & History",
-                    titleHi: "टेस्ट 1: विज्ञान और इतिहास",
-                    description: "Basics of Science, Indian History & Freedom Struggle",
-                    descriptionHi: "विज्ञान, भारतीय इतिहास और स्वतंत्रता संग्राम की मूल बातें",
-                    questions: generateQuestions(1, [
-                        { question: "Which gas is most abundant in the Earth's atmosphere?", questionHi: "पृथ्वी के वायुमंडल में कौन सी गैस सबसे प्रचुर मात्रा में है?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], optionsHi: ["ऑक्सीजन", "कार्बन डाइऑक्साइड", "नाइट्रोजन", "हाइड्रोजन"], correct: "Nitrogen" },
-                        { question: "What is the chemical symbol for Gold?", questionHi: "सोने का रासायनिक प्रतीक क्या है?", options: ["Ag", "Au", "Fe", "Hg"], optionsHi: ["Ag", "Au", "Fe", "Hg"], correct: "Au" },
-                        { question: "Which organ pumps blood in human body?", questionHi: "मानव शरीर में रक्त कौन सा अंग पंप करता है?", options: ["Lungs", "Brain", "Heart", "Liver"], optionsHi: ["फेफड़े", "मस्तिष्क", "हृदय", "यकृत"], correct: "Heart" },
-                        { question: "Process by which plants make food?", questionHi: "पौधे किस प्रक्रिया द्वारा भोजन बनाते हैं?", options: ["Respiration", "Digestion", "Photosynthesis", "Transpiration"], optionsHi: ["श्वसन", "पाचन", "प्रकाश संश्लेषण", "वाष्पोत्सर्जन"], correct: "Photosynthesis" },
-                        { question: "Which planet is the 'Red Planet'?", questionHi: "'लाल ग्रह' कौन सा है?", options: ["Venus", "Jupiter", "Mars", "Saturn"], optionsHi: ["शुक्र", "बृहस्पति", "मंगल", "शनि"], correct: "Mars" },
-                        { question: "Hardest natural substance on Earth?", questionHi: "पृथ्वी पर सबसे कठोर प्राकृतिक पदार्थ?", options: ["Gold", "Iron", "Diamond", "Platinum"], optionsHi: ["सोना", "लोहा", "हीरा", "प्लैटिनम"], correct: "Diamond" },
-                        { question: "Vitamin obtained from sunlight?", questionHi: "सूर्य के प्रकाश से प्राप्त विटामिन?", options: ["Vit A", "Vit C", "Vit D", "Vit K"], optionsHi: ["विटामिन A", "विटामिन C", "विटामिन D", "विटामिन K"], correct: "Vit D" },
-                        { question: "Boiling point of water?", questionHi: "पानी का क्वथनांक?", options: ["50°C", "100°C", "150°C", "200°C"], optionsHi: ["50°C", "100°C", "150°C", "200°C"], correct: "100°C" },
-                        { question: "Instrument to measure atmospheric pressure?", questionHi: "वायुमंडलीय दबाव मापने का यंत्र?", options: ["Thermometer", "Barometer", "Speedometer", "Seismograph"], optionsHi: ["थर्मामीटर", "बैरोमीटर", "स्पीडोमीटर", "सीस्मोग्राफ"], correct: "Barometer" },
-                        { question: "Father of the Computer?", questionHi: "कंप्यूटर के जनक?", options: ["Alan Turing", "Charles Babbage", "Bill Gates", "Steve Jobs"], optionsHi: ["एलन ट्यूरिंग", "चार्ल्स बैबेज", "बिल गेट्स", "स्टीव जॉब्स"], correct: "Charles Babbage" },
-                        // ... All questions preserved ...
-                        { question: "Powerhouse of the cell?", questionHi: "कोशिका का पावरहाउस?", options: ["Nucleus", "Mitochondria", "Ribosome", "Cytoplasm"], optionsHi: ["केंद्रक", "माइटोकॉन्ड्रिया", "राइबोसोम", "कोशिका द्रव्य"], correct: "Mitochondria" },
-                        { question: "Laughing Gas is?", questionHi: "लाफिंग गैस क्या है?", options: ["Nitrous Oxide", "Carbon Monoxide", "Sulphur Dioxide", "Helium"], optionsHi: ["नाइट्रस ऑक्साइड", "कार्बन मोनोऑक्साइड", "सल्फर डाइऑक्साइड", "हीलियम"], correct: "Nitrous Oxide" },
-                        { question: "Bones in adult human body?", questionHi: "वयस्क मानव शरीर में हड्डियाँ?", options: ["206", "208", "300", "210"], optionsHi: ["206", "208", "300", "210"], correct: "206" },
-                        { question: "Blood cells fighting infection?", questionHi: "संक्रमण से लड़ने वाली रक्त कोशिकाएं?", options: ["RBC", "WBC", "Platelets", "Plasma"], optionsHi: ["लाल रक्त कोशिकाएं", "श्वेत रक्त कोशिकाएं", "प्लेटलेट्स", "प्लाज्मा"], correct: "WBC" },
-                        { question: "Study of earthquakes?", questionHi: "भूकंप का अध्ययन?", options: ["Geology", "Seismology", "Astrology", "Topology"], optionsHi: ["भूविज्ञान", "भूकंप विज्ञान", "ज्योतिष", "टोपोलॉजी"], correct: "Seismology" },
-                        { question: "First PM of India?", questionHi: "भारत के पहले प्रधानमंत्री?", options: ["Gandhi", "Patel", "Nehru", "Ambedkar"], optionsHi: ["गांधी", "पटेल", "नेहरू", "अंबेडकर"], correct: "Nehru" },
-                        { question: "India's Independence Year?", questionHi: "भारत की स्वतंत्रता का वर्ष?", options: ["1945", "1947", "1950", "1952"], optionsHi: ["1945", "1947", "1950", "1952"], correct: "1947" },
-                        { question: "Iron Man of India?", questionHi: "भारत के लौह पुरुष?", options: ["Bose", "Bhagat Singh", "Sardar Patel", "Shastri"], optionsHi: ["बोस", "भगत सिंह", "सरदार पटेल", "शास्त्री"], correct: "Sardar Patel" },
-                        { question: "Author of National Anthem?", questionHi: "राष्ट्रगान के रचयिता?", options: ["Bankim Chandra", "Tagore", "Sarojini Naidu", "Bharati"], optionsHi: ["बंकिम चंद्र", "टैगोर", "सरोजिनी नायडू", "भारती"], correct: "Tagore" },
-                        { question: "Jallianwala Bagh Year?", questionHi: "जलियांवाला बाग वर्ष?", options: ["1919", "1920", "1915", "1922"], optionsHi: ["1919", "1920", "1915", "1922"], correct: "1919" },
-                        { question: "Last Viceroy of India?", questionHi: "भारत का अंतिम वायसराय?", options: ["Curzon", "Mountbatten", "Dalhousie", "Canning"], optionsHi: ["कर्जन", "माउंटबेटन", "डलहौजी", "कैनिंग"], correct: "Mountbatten" },
-                        { question: "Quit India Movement Year?", questionHi: "भारत छोड़ो आंदोलन वर्ष?", options: ["1930", "1942", "1945", "1920"], optionsHi: ["1930", "1942", "1945", "1920"], correct: "1942" },
-                        { question: "Founder of Maurya Empire?", questionHi: "मौर्य साम्राज्य के संस्थापक?", options: ["Ashoka", "Chandragupta", "Bindusara", "Porus"], optionsHi: ["अशोक", "चंद्रगुप्त", "बिन्दुसार", "पोरस"], correct: "Chandragupta" },
-                        { question: "Builder of Taj Mahal?", questionHi: "ताजमहल के निर्माता?", options: ["Akbar", "Jahangir", "Shah Jahan", "Aurangzeb"], optionsHi: ["अकबर", "जहाँगीर", "शाहजहाँ", "औरंगजेब"], correct: "Shah Jahan" },
-                        { question: "First US President?", questionHi: "अमेरिका के पहले राष्ट्रपति?", options: ["Lincoln", "Washington", "Jefferson", "Kennedy"], optionsHi: ["लिंकन", "वाशिंगटन", "जेफरसन", "केनेडी"], correct: "Washington" },
-                        { question: "Largest Continent?", questionHi: "सबसे बड़ा महाद्वीप?", options: ["Africa", "North America", "Asia", "Europe"], optionsHi: ["अफ्रीका", "उत्तरी अमेरिका", "एशिया", "यूरोप"], correct: "Asia" },
-                        { question: "Longest River?", questionHi: "सबसे लंबी नदी?", options: ["Amazon", "Nile", "Ganga", "Yangtze"], optionsHi: ["अमेज़न", "नील", "गंगा", "यांग्त्ज़ी"], correct: "Nile" },
-                        { question: "Capital of Australia?", questionHi: "ऑस्ट्रेलिया की राजधानी?", options: ["Sydney", "Melbourne", "Canberra", "Perth"], optionsHi: ["सिडनी", "मेलबर्न", "कैनबरा", "पर्थ"], correct: "Canberra" },
-                        { question: "Land of Rising Sun?", questionHi: "उगते सूरज की भूमि?", options: ["China", "Japan", "Thailand", "Korea"], optionsHi: ["चीन", "जापान", "थाईलैंड", "कोरिया"], correct: "Japan" },
-                        { question: "Line dividing earth in half?", questionHi: "पृथ्वी को आधा करने वाली रेखा?", options: ["Cancer", "Capricorn", "Equator", "Meridian"], optionsHi: ["कर्क", "मकर", "भूमध्य रेखा", "मध्याह्न"], correct: "Equator" },
-                        { question: "Smallest state in India?", questionHi: "भारत का सबसे छोटा राज्य?", options: ["Sikkim", "Goa", "Tripura", "Manipur"], optionsHi: ["सिक्किम", "गोवा", "त्रिपुरा", "मणिपुर"], correct: "Goa" },
-                        { question: "Largest hot desert?", questionHi: "सबसे बड़ा गर्म मरुस्थल?", options: ["Gobi", "Kalahari", "Sahara", "Thar"], optionsHi: ["गोबी", "कालाहारी", "सहारा", "थार"], correct: "Sahara" },
-                        { question: "State with longest coastline?", questionHi: "सबसे लंबी तटरेखा वाला राज्य?", options: ["Maharashtra", "Tamil Nadu", "Gujarat", "Andhra"], optionsHi: ["महाराष्ट्र", "तमिलनाडु", "गुजरात", "आंध्र"], correct: "Gujarat" },
-                        { question: "Mount Everest is in?", questionHi: "माउंट एवरेस्ट कहाँ है?", options: ["India", "Nepal", "China", "Bhutan"], optionsHi: ["भारत", "नेपाल", "चीन", "भूटान"], correct: "Nepal" },
-                        { question: "Coldest Continent?", questionHi: "सबसे ठंडा महाद्वीप?", options: ["Europe", "Antarctica", "Asia", "America"], optionsHi: ["यूरोप", "अंटार्कटिका", "एशिया", "अमेरिका"], correct: "Antarctica" },
-                        { question: "Father of Constitution?", questionHi: "संविधान के जनक?", options: ["Gandhi", "Prasad", "Ambedkar", "Nehru"], optionsHi: ["गांधी", "प्रसाद", "अंबेडकर", "नेहरू"], correct: "Ambedkar" },
-                        { question: "Min age for President?", questionHi: "राष्ट्रपति के लिए न्यूनतम आयु?", options: ["25", "30", "35", "40"], optionsHi: ["25", "30", "35", "40"], correct: "35" },
-                        { question: "Number of Fundamental Rights?", questionHi: "मौलिक अधिकारों की संख्या?", options: ["5", "6", "7", "8"], optionsHi: ["5", "6", "7", "8"], correct: "6" },
-                        { question: "Supreme Court location?", questionHi: "सुप्रीम कोर्ट कहाँ है?", options: ["Mumbai", "Kolkata", "Chennai", "New Delhi"], optionsHi: ["मुंबई", "कोलकाता", "चेन्नई", "नई दिल्ली"], correct: "New Delhi" },
-                        { question: "Currency of Japan?", questionHi: "जापान की मुद्रा?", options: ["Yuan", "Won", "Yen", "Ringgit"], optionsHi: ["युआन", "वॉन", "येन", "रिंगिट"], correct: "Yen" },
-                        { question: "Pink City of India?", questionHi: "गुलाबी शहर?", options: ["Udaipur", "Jaipur", "Jodhpur", "Bikaner"], optionsHi: ["उदयपुर", "जयपुर", "जोधपुर", "बीकानेर"], correct: "Jaipur" },
-                        { question: "Painted Mona Lisa?", questionHi: "मोना लिसा किसने बनाई?", options: ["Van Gogh", "Picasso", "Da Vinci", "Michelangelo"], optionsHi: ["वैन गॉग", "पिकासो", "दा विंची", "एंजेलो"], correct: "Da Vinci" },
-                        { question: "Olympics held every _ years?", questionHi: "ओलंपिक हर _ साल में?", options: ["2", "3", "4", "5"], optionsHi: ["2", "3", "4", "5"], correct: "4" },
-                        { question: "National Animal of India?", questionHi: "भारत का राष्ट्रीय पशु?", options: ["Lion", "Tiger", "Elephant", "Leopard"], optionsHi: ["शेर", "बाघ", "हाथी", "तेंदुआ"], correct: "Tiger" },
-                        { question: "CPU stands for?", questionHi: "CPU का मतलब?", options: ["Central Processing Unit", "Central Program Unit", "Control Processing Unit", "Computer Unit"], optionsHi: ["सेंट्रल प्रोसेसिंग यूनिट", "सेंट्रल प्रोग्राम यूनिट", "कंट्रोल प्रोसेसिंग यूनिट", "कंप्यूटर यूनिट"], correct: "Central Processing Unit" },
-                        { question: "Festival of Lights?", questionHi: "रोशनी का त्योहार?", options: ["Holi", "Eid", "Diwali", "Christmas"], optionsHi: ["होली", "ईद", "दिवाली", "क्रिसमस"], correct: "Diwali" },
-                        { question: "Players in Cricket team?", questionHi: "क्रिकेट टीम में खिलाड़ी?", options: ["10", "11", "12", "9"], optionsHi: ["10", "11", "12", "9"], correct: "11" },
-                        { question: "Bird that mimics speech?", questionHi: "बोली की नकल करने वाला पक्षी?", options: ["Crow", "Parrot", "Peacock", "Eagle"], optionsHi: ["कौआ", "तोता", "मोर", "ईगल"], correct: "Parrot" },
-                        { question: "Great Wall location?", questionHi: "ग्रेट वॉल कहाँ है?", options: ["Japan", "China", "Mongolia", "Korea"], optionsHi: ["जापान", "चीन", "मंगोलिया", "कोरिया"], correct: "China" },
-                        { question: "Planet closest to Sun?", questionHi: "सूर्य के सबसे निकट ग्रह?", options: ["Venus", "Earth", "Mars", "Mercury"], optionsHi: ["शुक्र", "पृथ्वी", "मंगल", "बुध"], correct: "Mercury" }
-                    ])
-                },
-                test2: {
-                    title: "Test 2: Current Affairs & Sports",
-                    titleHi: "टेस्ट 2: करंट अफेयर्स और खेल",
-                    description: "Recent Events (2024-25), Sports GK & Awards",
-                    descriptionHi: "हाल की घटनाएं (2024-25), खेल जीके और पुरस्कार",
-                    questions: generateQuestions(51, [
-                        { question: "UN Secretary-General?", questionHi: "संयुक्त राष्ट्र महासचिव?", options: ["Ban Ki-moon", "Antonio Guterres", "Kofi Annan", "Joe Biden"], optionsHi: ["बान की मून", "एंटोनियो गुटेरेस", "कोफी अन्नान", "जो बिडेन"], correct: "Antonio Guterres" },
-                        { question: "Host of 2024 Olympics?", questionHi: "2024 ओलंपिक का मेजबान?", options: ["Tokyo", "Los Angeles", "Paris", "London"], optionsHi: ["टोक्यो", "लॉस एंजिल्स", "पेरिस", "लंदन"], correct: "Paris" },
-                        { question: "President of India (2025)?", questionHi: "भारत के राष्ट्रपति (2025)?", options: ["Ram Nath Kovind", "Droupadi Murmu", "Modi", "Pratibha Patil"], optionsHi: ["कोविंद", "द्रौपदी मुर्मू", "मोदी", "पाटिल"], correct: "Droupadi Murmu" },
-                        { question: "31st NATO Member?", questionHi: "31वां नाटो सदस्य?", options: ["Sweden", "Finland", "Ukraine", "Austria"], optionsHi: ["स्वीडन", "फिनलैंड", "यूक्रेन", "ऑस्ट्रिया"], correct: "Finland" },
-                        { question: "India's First Solar Mission?", questionHi: "भारत का पहला सौर मिशन?", options: ["Chandrayaan-3", "Aditya-L1", "Mangalyaan", "Gaganyaan"], optionsHi: ["चंद्रयान-3", "आदित्य-L1", "मंगलयान", "गगनयान"], correct: "Aditya-L1" },
-                        { question: "Oscar Best Picture 2024?", questionHi: "ऑस्कर सर्वश्रेष्ठ फिल्म 2024?", options: ["Oppenheimer", "Barbie", "Killers of Flower Moon", "Poor Things"], optionsHi: ["ओपेनहाइमर", "बार्बी", "किलर्स ऑफ फ्लावर मून", "पुअर थिंग्स"], correct: "Oppenheimer" },
-                        { question: "Missile Man of India?", questionHi: "भारत के मिसाइल मैन?", options: ["Homi Bhabha", "Sarabhai", "APJ Abdul Kalam", "CV Raman"], optionsHi: ["होमी भाभा", "साराभाई", "एपीजे अब्दुल कलाम", "सीवी रमन"], correct: "APJ Abdul Kalam" },
-                        { question: "New name of Twitter?", questionHi: "ट्विटर का नया नाम?", options: ["Y", "X", "Z", "Tweet"], optionsHi: ["Y", "X", "Z", "Tweet"], correct: "X" },
-                        { question: "Winner ICC World Cup 2023?", questionHi: "ICC विश्व कप 2023 विजेता?", options: ["India", "England", "NZ", "Australia"], optionsHi: ["भारत", "इंग्लैंड", "न्यूजीलैंड", "ऑस्ट्रेलिया"], correct: "Australia" },
-                        { question: "Ram Mandir is in which state?", questionHi: "राम मंदिर किस राज्य में है?", options: ["MP", "UP", "Bihar", "Gujarat"], optionsHi: ["एमपी", "यूपी", "बिहार", "गुजरात"], correct: "UP" },
-                        { question: "Harry Potter Author?", questionHi: "हैरी पॉटर लेखक?", options: ["Tolkien", "JK Rowling", "Dahl", "Blyton"], optionsHi: ["टोल्किन", "जेके रोलिंग", "डाहल", "ब्लीटन"], correct: "JK Rowling" },
-                        { question: "Jungle Book Author?", questionHi: "जंगल बुक लेखक?", options: ["Kipling", "Twain", "Dickens", "Bond"], optionsHi: ["किपलिंग", "ट्वेन", "डिकेंस", "बॉन्ड"], correct: "Kipling" },
-                        { question: "Malgudi Days Author?", questionHi: "मालगुडी डेज़ लेखक?", options: ["RK Narayan", "Chetan Bhagat", "Roy", "Seth"], optionsHi: ["आरके नारायण", "चेतन भगत", "रॉय", "सेठ"], correct: "RK Narayan" },
-                        { question: "Romeo and Juliet Author?", questionHi: "रोमियो और जूलियट लेखक?", options: ["Wordsworth", "Shakespeare", "Milton", "Austen"], optionsHi: ["वर्ड्सवर्थ", "शेक्सपियर", "मिल्टन", "ऑस्टेन"], correct: "Shakespeare" },
-                        { question: "Holy Book of Christians?", questionHi: "ईसाइयों का पवित्र ग्रंथ?", options: ["Quran", "Vedas", "Bible", "Guru Granth"], optionsHi: ["कुरान", "वेद", "बाइबल", "गुरु ग्रंथ"], correct: "Bible" },
-                        { question: "Creator of Sherlock Holmes?", questionHi: "शेरलॉक होम्स के रचयिता?", options: ["Potter", "Conan Doyle", "Poirot", "Bond"], optionsHi: ["पॉटर", "कॉनन डॉयल", "पोयरोट", "बॉन्ड"], correct: "Conan Doyle" },
-                        { question: "Discovery of India Author?", questionHi: "डिस्कवरी ऑफ इंडिया के लेखक?", options: ["Gandhi", "Patel", "Nehru", "Indira"], optionsHi: ["गांधी", "पटेल", "नेहरू", "इंदिरा"], correct: "Nehru" },
-                        { question: "Panchatantra Author?", questionHi: "पंचतंत्र के लेखक?", options: ["Kalidasa", "Vishnu Sharma", "Valmiki", "Tulsidas"], optionsHi: ["कालिदास", "विष्णु शर्मा", "वाल्मीकि", "तुलसीदास"], correct: "Vishnu Sharma" },
-                        { question: "LBW is used in?", questionHi: "LBW किसमें प्रयोग होता है?", options: ["Football", "Hockey", "Cricket", "Tennis"], optionsHi: ["फ़ुटबॉल", "हॉकी", "क्रिकेट", "टेनिस"], correct: "Cricket" },
-                        { question: "Flying Sikh?", questionHi: "फ्लाइंग सिख?", options: ["Milkha Singh", "Dhyan Chand", "Kapil Dev", "Neeraj"], optionsHi: ["मिल्खा सिंह", "ध्यानचंद", "कपिल देव", "नीरज"], correct: "Milkha Singh" },
-                        { question: "Rings in Olympic Logo?", questionHi: "ओलंपिक लोगो में छल्ले?", options: ["4", "5", "6", "7"], optionsHi: ["4", "5", "6", "7"], correct: "5" },
-                        { question: "Sumo Wrestling Country?", questionHi: "सुमो कुश्ती देश?", options: ["China", "Japan", "Korea", "Thailand"], optionsHi: ["चीन", "जापान", "कोरिया", "थाईलैंड"], correct: "Japan" },
-                        { question: "PV Sindhu Sport?", questionHi: "पीवी सिंधु खेल?", options: ["Tennis", "Badminton", "Boxing", "Wrestling"], optionsHi: ["टेनिस", "बैडमिंटन", "मुक्केबाजी", "कुश्ती"], correct: "Badminton" },
-                        { question: "USA National Sport?", questionHi: "यूएसए राष्ट्रीय खेल?", options: ["Football", "Baseball", "Basketball", "Hockey"], optionsHi: ["फ़ुटबॉल", "बेसबॉल", "बास्केटबॉल", "हॉकी"], correct: "Baseball" },
-                        { question: "FIFA World Cup Sport?", questionHi: "फीफा विश्व कप खेल?", options: ["Cricket", "Hockey", "Football", "Rugby"], optionsHi: ["क्रिकेट", "हॉकी", "फ़ुटबॉल", "रग्बी"], correct: "Football" },
-                        { question: "Speed of Light?", questionHi: "प्रकाश की गति?", options: ["300,000 km/s", "150,000 km/s", "1,000 km/s", "30,000 km/s"], optionsHi: ["300,000 km/s", "150,000 km/s", "1,000 km/s", "30,000 km/s"], correct: "300,000 km/s" },
-                        { question: "Gas absorbing UV?", questionHi: "UV अवशोषित करने वाली गैस?", options: ["Oxygen", "Ozone", "Nitrogen", "Argon"], optionsHi: ["ऑक्सीजन", "ओजोन", "नाइट्रोजन", "आर्गन"], correct: "Ozone" },
-                        { question: "Unit of Electric Current?", questionHi: "विद्युत धारा की इकाई?", options: ["Volt", "Watt", "Ampere", "Joule"], optionsHi: ["वोल्ट", "वाट", "एम्पीयर", "जूल"], correct: "Ampere" },
-                        { question: "Gravity discovered by?", questionHi: "गुरुत्वाकर्षण की खोज?", options: ["Einstein", "Newton", "Galileo", "Tesla"], optionsHi: ["आइंस्टीन", "न्यूटन", "गैलीलियो", "टेस्ला"], correct: "Newton" },
-                        { question: "Planet with most moons?", questionHi: "सर्वाधिक चंद्रमा वाला ग्रह?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], optionsHi: ["बृहस्पति", "शनि", "युरेनस", "नेपच्यून"], correct: "Saturn" },
-                        { question: "Study of stars?", questionHi: "तारों का अध्ययन?", options: ["Astronomy", "Astrology", "Geology", "Botany"], optionsHi: ["खगोल विज्ञान", "ज्योतिष", "भूविज्ञान", "वनस्पति"], correct: "Astronomy" },
-                        { question: "www stands for?", questionHi: "www का मतलब?", options: ["World Wide Web", "World Web Wide", "Wide World Web", "Web World Wide"], optionsHi: ["वर्ल्ड वाइड वेब", "वर्ल्ड वेब वाइड", "वाइड वर्ल्ड वेब", "वेब वर्ल्ड वाइड"], correct: "World Wide Web" },
-                        { question: "Liquid metal?", questionHi: "तरल धातु?", options: ["Iron", "Mercury", "Aluminium", "Copper"], optionsHi: ["लोहा", "पारा", "एल्यूमीनियम", "तांबा"], correct: "Mercury" },
-                        { question: "Smallest Country?", questionHi: "सबसे छोटा देश?", options: ["Monaco", "Vatican City", "Maldives", "Nauru"], optionsHi: ["मोनाको", "वेटिकन सिटी", "मालदीव", "नाउरू"], correct: "Vatican City" },
-                        { question: "First Woman PM of India?", questionHi: "भारत की पहली महिला पीएम?", options: ["Sarojini", "Indira Gandhi", "Pratibha", "Sushma"], optionsHi: ["सरोजिनी", "इंदिरा गांधी", "प्रतिभा", "सुषमा"], correct: "Indira Gandhi" },
-                        { question: "ISRO HQ?", questionHi: "इसरो मुख्यालय?", options: ["Delhi", "Mumbai", "Chennai", "Bengaluru"], optionsHi: ["दिल्ली", "मुंबई", "चेन्नई", "बेंगलुरु"], correct: "Bengaluru" },
-                        { question: "Most spoken language?", questionHi: "सर्वाधिक बोली जाने वाली भाषा?", options: ["Spanish", "English", "Mandarin", "Hindi"], optionsHi: ["स्पेनिश", "अंग्रेजी", "मंदारिन", "हिंदी"], correct: "Mandarin" },
-                        { question: "ATM stands for?", questionHi: "ATM का मतलब?", options: ["Any Time Money", "Automated Teller Machine", "All Time Money", "Auto Transaction Machine"], optionsHi: ["Any Time Money", "Automated Teller Machine", "All Time Money", "Auto Transaction Machine"], correct: "Automated Teller Machine" },
-                        { question: "Sea between Europe and Africa?", questionHi: "यूरोप और अफ्रीका के बीच समुद्र?", options: ["Red", "Mediterranean", "Arabian", "Black"], optionsHi: ["लाल", "भूमध्य", "अरब", "काला"], correct: "Mediterranean" },
-                        { question: "Telephone Inventor?", questionHi: "टेलीफोन आविष्कारक?", options: ["Edison", "Bell", "Tesla", "Marconi"], optionsHi: ["एडिसन", "बेल", "टेस्ला", "मार्कोनी"], correct: "Bell" },
-                        { question: "Deepest Ocean?", questionHi: "सबसे गहरा महासागर?", options: ["Atlantic", "Indian", "Pacific", "Arctic"], optionsHi: ["अटलांटिक", "हिंद", "प्रशांत", "आर्कटिक"], correct: "Pacific" },
-                        { question: "Statue of Liberty gift from?", questionHi: "स्टैच्यू ऑफ लिबर्टी उपहार किससे?", options: ["UK", "France", "Germany", "Spain"], optionsHi: ["यूके", "फ्रांस", "जर्मनी", "स्पेन"], correct: "France" },
-                        { question: "Vitamin for Scurvy?", questionHi: "स्कर्वी के लिए विटामिन?", options: ["A", "B", "C", "D"], optionsHi: ["A", "B", "C", "D"], correct: "C" },
-                        { question: "Known as Netaji?", questionHi: "नेताजी के नाम से प्रसिद्ध?", options: ["Gandhi", "Bose", "Bhagat", "Nehru"], optionsHi: ["गांधी", "बोस", "भगत", "नेहरू"], correct: "Bose" },
-                        { question: "Silicon Valley of India?", questionHi: "भारत की सिलिकॉन वैली?", options: ["Hyderabad", "Pune", "Bengaluru", "Gurgaon"], optionsHi: ["हैदराबाद", "पुणे", "बेंगलुरु", "गुड़गांव"], correct: "Bengaluru" },
-                        { question: "Formula for Water?", questionHi: "पानी का सूत्र?", options: ["HO2", "H2O", "CO2", "O2"], optionsHi: ["HO2", "H2O", "CO2", "O2"], correct: "H2O" },
-                        { question: "Continent with no desert?", questionHi: "बिना मरुस्थल वाला महाद्वीप?", options: ["Europe", "North America", "Australia", "Asia"], optionsHi: ["यूरोप", "उत्तरी अमेरिका", "ऑस्ट्रेलिया", "एशिया"], correct: "Europe" },
-                        { question: "First human in space?", questionHi: "अंतरिक्ष में पहला इंसान?", options: ["Armstrong", "Gagarin", "Aldrin", "Sharma"], optionsHi: ["आर्मस्ट्रांग", "गगारिन", "एल्ड्रिन", "शर्मा"], correct: "Gagarin" },
-                        { question: "National Flower of India?", questionHi: "भारत का राष्ट्रीय फूल?", options: ["Rose", "Lotus", "Sunflower", "Jasmine"], optionsHi: ["गुलाब", "कमल", "सूरजमुखी", "चमेली"], correct: "Lotus" },
-                        { question: "Seconds in an hour?", questionHi: "एक घंटे में सेकंड?", options: ["3600", "60", "360", "6000"], optionsHi: ["3600", "60", "360", "6000"], correct: "3600" }
-                    ])
-                },
-                test3: {
-                    title: "Test 3: Geography & India",
-                    titleHi: "टेस्ट 3: भूगोल और भारत",
-                    description: "Indian States, Rivers, Space & General Geography",
-                    descriptionHi: "भारतीय राज्य, नदियाँ, अंतरिक्ष और सामान्य भूगोल",
-                    questions: generateQuestions(101, [
-                        { question: "Land of Five Rivers?", questionHi: "पाँच नदियों की भूमि?", options: ["Punjab", "Haryana", "UP", "Bihar"], optionsHi: ["पंजाब", "हरियाणा", "यूपी", "बिहार"], correct: "Punjab" },
-                        { question: "Capital of Tamil Nadu?", questionHi: "तमिलनाडु की राजधानी?", options: ["Madurai", "Coimbatore", "Chennai", "Trichy"], optionsHi: ["मदुरै", "कोयंबटूर", "चेन्नई", "त्रिची"], correct: "Chennai" },
-                        { question: "Kathakali is from?", questionHi: "कथकली कहाँ से है?", options: ["TN", "Kerala", "Karnataka", "Andhra"], optionsHi: ["तमिलनाडु", "केरल", "कर्नाटक", "आंध्र"], correct: "Kerala" },
-                        { question: "Spice Garden of India?", questionHi: "भारत का मसाला उद्यान?", options: ["Assam", "Kerala", "Sikkim", "Goa"], optionsHi: ["असम", "केरल", "सिक्किम", "गोवा"], correct: "Kerala" },
-                        { question: "Kaziranga National Park?", questionHi: "काजीरंगा राष्ट्रीय उद्यान?", options: ["Bengal", "Manipur", "Assam", "Meghalaya"], optionsHi: ["बंगाल", "मणिपुर", "असम", "मेघालय"], correct: "Assam" },
-                        { question: "Largest fresh water lake India?", questionHi: "भारत की सबसे बड़ी ताजे पानी की झील?", options: ["Dal", "Wular", "Chilika", "Sambhar"], optionsHi: ["डल", "वुलर", "चिलिका", "सांभर"], correct: "Wular" },
-                        { question: "First Indian woman in space?", questionHi: "अंतरिक्ष में पहली भारतीय महिला?", options: ["Sunita", "Kalpana Chawla", "Rakesh", "Valentina"], optionsHi: ["सुनीता", "कल्पना चावला", "राकेश", "वेलेंटीना"], correct: "Kalpana Chawla" },
-                        { question: "City of Joy?", questionHi: "खुशी का शहर?", options: ["Mumbai", "Delhi", "Kolkata", "Chennai"], optionsHi: ["मुंबई", "दिल्ली", "कोलकाता", "चेन्नई"], correct: "Kolkata" },
-                        { question: "Gurmukhi script language?", questionHi: "गुरुमुखी लिपि भाषा?", options: ["Hindi", "Punjabi", "Urdu", "Bengali"], optionsHi: ["हिंदी", "पंजाबी", "उर्दू", "बंगाली"], correct: "Punjabi" },
-                        { question: "Sun Temple Konark?", questionHi: "सूर्य मंदिर कोणार्क?", options: ["Odisha", "MP", "Gujarat", "Rajasthan"], optionsHi: ["ओडिशा", "एमपी", "गुजरात", "राजस्थान"], correct: "Odisha" },
-                        { question: "Organ filtering blood?", questionHi: "रक्त छानने वाला अंग?", options: ["Heart", "Liver", "Kidney", "Lungs"], optionsHi: ["हृदय", "यकृत", "गुर्दा", "फेफड़े"], correct: "Kidney" },
-                        { question: "Normal body temp?", questionHi: "सामान्य शरीर का तापमान?", options: ["36°C", "37°C", "38°C", "40°C"], optionsHi: ["36°C", "37°C", "38°C", "40°C"], correct: "37°C" },
-                        { question: "Malaria caused by?", questionHi: "मलेरिया का कारण?", options: ["Dengue", "Mosquito", "Typhoid", "Cholera"], optionsHi: ["डेंगू", "मच्छर", "टाइफाइड", "हैजा"], correct: "Mosquito" },
-                        { question: "Eye part controlling light?", questionHi: "आंख का प्रकाश नियंत्रक?", options: ["Retina", "Iris", "Cornea", "Lens"], optionsHi: ["रेटिना", "आइरिस", "कॉर्निया", "लेंस"], correct: "Iris" },
-                        { question: "Adult teeth count?", questionHi: "वयस्क दांतों की संख्या?", options: ["28", "30", "32", "34"], optionsHi: ["28", "30", "32", "34"], correct: "32" },
-                        { question: "Acid in stomach?", questionHi: "पेट में अम्ल?", options: ["Sulfuric", "Hydrochloric", "Nitric", "Acetic"], optionsHi: ["सल्फ्यूरिक", "हाइड्रोक्लोरिक", "नाइट्रिक", "एसिटिक"], correct: "Hydrochloric" },
-                        { question: "Largest internal organ?", questionHi: "सबसे बड़ा आंतरिक अंग?", options: ["Heart", "Liver", "Lungs", "Stomach"], optionsHi: ["हृदय", "यकृत", "फेफड़े", "पेट"], correct: "Liver" },
-                        { question: "Body Building Food?", questionHi: "शरीर बनाने वाला भोजन?", options: ["Carbs", "Fats", "Proteins", "Vitamins"], optionsHi: ["कार्ब्स", "वसा", "प्रोटीन", "विटामिन"], correct: "Proteins" },
-                        { question: "Light Bulb Inventor?", questionHi: "लाइट बल्ब आविष्कारक?", options: ["Edison", "Tesla", "Bell", "Watt"], optionsHi: ["एडिसन", "टेस्ला", "बेल", "वाट"], correct: "Edison" },
-                        { question: "Radio Inventor?", questionHi: "रेडियो आविष्कारक?", options: ["Marconi", "Baird", "Edison", "Newton"], optionsHi: ["मार्कोनी", "बायर्ड", "एडिसन", "न्यूटन"], correct: "Marconi" },
-                        { question: "Planet with rings?", questionHi: "छल्ले वाला ग्रह?", options: ["Jupiter", "Saturn", "Uranus", "Mars"], optionsHi: ["बृहस्पति", "शनि", "युरेनस", "मंगल"], correct: "Saturn" },
-                        { question: "Our Galaxy?", questionHi: "हमारी आकाशगंगा?", options: ["Andromeda", "Milky Way", "Triangulum", "Whirlpool"], optionsHi: ["एंड्रोमेडा", "मिल्की वे", "ट्राईंगुलम", "व्हर्लपूल"], correct: "Milky Way" },
-                        { question: "First on Moon?", questionHi: "चांद पर पहला?", options: ["Armstrong", "Aldrin", "Gagarin", "Collins"], optionsHi: ["आर्मस्ट्रांग", "एल्ड्रिन", "गगारिन", "कोलिन्स"], correct: "Armstrong" },
-                        { question: "Instrument for space?", questionHi: "अंतरिक्ष के लिए यंत्र?", options: ["Microscope", "Telescope", "Periscope", "Kaleidoscope"], optionsHi: ["माइक्रोस्कोप", "टेलीस्कोप", "पेरिस्कोप", "कलीडोस्कोप"], correct: "Telescope" },
-                        { question: "ISRO stands for?", questionHi: "इसरो का मतलब?", options: ["Indian Space Research Org", "Intl Space Org", "Indian Science Org", "Indian Rocket Org"], optionsHi: ["भारतीय अंतरिक्ष अनुसंधान संगठन", "अंतर्राष्ट्रीय अंतरिक्ष संगठन", "भारतीय विज्ञान संगठन", "भारतीय रॉकेट संगठन"], correct: "Indian Space Research Org" },
-                        { question: "Highest Waterfall?", questionHi: "सबसे ऊंचा जलप्रपात?", options: ["Niagara", "Angel", "Victoria", "Jog"], optionsHi: ["नियाग्रा", "एंजेल", "विक्टोरिया", "जोग"], correct: "Angel" },
-                        { question: "Largest Island?", questionHi: "सबसे बड़ा द्वीप?", options: ["Australia", "Greenland", "New Guinea", "Borneo"], optionsHi: ["ऑस्ट्रेलिया", "ग्रीनलैंड", "न्यू गिनी", "बोर्नियो"], correct: "Greenland" },
-                        { question: "Most Populous Country?", questionHi: "सर्वाधिक जनसंख्या वाला देश?", options: ["India", "China", "USA", "Russia"], optionsHi: ["भारत", "चीन", "यूएसए", "रूस"], correct: "India" },
-                        { question: "Longest River India?", questionHi: "भारत की सबसे लंबी नदी?", options: ["Yamuna", "Godavari", "Ganga", "Narmada"], optionsHi: ["यमुना", "गोदावरी", "गंगा", "नर्मदा"], correct: "Ganga" },
-                        { question: "Mt Kilimanjaro Continent?", questionHi: "माउंट किलिमंजारो महाद्वीप?", options: ["Asia", "Africa", "Europe", "S. America"], optionsHi: ["एशिया", "अफ्रीका", "यूरोप", "दक्षिण अमेरिका"], correct: "Africa" },
-                        { question: "Ozone Layer Sphere?", questionHi: "ओजोन परत मंडल?", options: ["Troposphere", "Stratosphere", "Mesosphere", "Exosphere"], optionsHi: ["क्षोभमंडल", "समताप मंडल", "मध्यमंडल", "बहिर्मंडल"], correct: "Stratosphere" },
-                        { question: "Ship of Desert?", questionHi: "रेगिस्तान का जहाज?", options: ["Horse", "Elephant", "Camel", "Donkey"], optionsHi: ["घोड़ा", "हाथी", "ऊंट", "गधा"], correct: "Camel" },
-                        { question: "Largest Egg?", questionHi: "सबसे बड़ा अंडा?", options: ["Ostrich", "Penguin", "Eagle", "Peacock"], optionsHi: ["शुतुरमुर्ग", "पेंगुइन", "ईगल", "मोर"], correct: "Ostrich" },
-                        { question: "Bamboo is?", questionHi: "बांस है?", options: ["Tree", "Shrub", "Grass", "Herb"], optionsHi: ["पेड़", "झाड़ी", "घास", "जड़ी बूटी"], correct: "Grass" },
-                        { question: "Smallest Bird?", questionHi: "सबसे छोटा पक्षी?", options: ["Sparrow", "Hummingbird", "Robin", "Parrot"], optionsHi: ["गौरैया", "हमिंगबर्ड", "रॉबिन", "तोता"], correct: "Hummingbird" },
-                        { question: "First Vice-President?", questionHi: "पहले उपराष्ट्रपति?", options: ["Prasad", "Radhakrishnan", "Giri", "Zakir"], optionsHi: ["प्रसाद", "राधाकृष्णन", "गिरी", "जाकिर"], correct: "Radhakrishnan" },
-                        { question: "King giving up war?", questionHi: "युद्ध त्यागने वाला राजा?", options: ["Chandragupta", "Ashoka", "Akbar", "Harsha"], optionsHi: ["चंद्रगुप्त", "अशोक", "अकबर", "हर्ष"], correct: "Ashoka" },
-                        { question: "Founder of Sikhism?", questionHi: "सिख धर्म के संस्थापक?", options: ["Nanak", "Gobind", "Tegh", "Arjan"], optionsHi: ["नानक", "गोबिंद", "तेग", "अर्जन"], correct: "Nanak" },
-                        { question: "Frontier Gandhi?", questionHi: "सीमांत गांधी?", options: ["Jinnah", "Ghaffar Khan", "Liaquat", "Azad"], optionsHi: ["जिन्ना", "गफ्फार खान", "लियाकत", "आजाद"], correct: "Ghaffar Khan" },
-                        { question: "Azad Hind Fauj?", questionHi: "आजाद हिंद फौज?", options: ["Bhagat", "Bose", "Azad", "Lajpat"], optionsHi: ["भगत", "बोस", "आजाद", "लाजपत"], correct: "Bose" },
-                        { question: "Republic Day?", questionHi: "गणतंत्र दिवस?", options: ["Aug 15", "Oct 2", "Jan 26", "Nov 14"], optionsHi: ["15 अगस्त", "2 अक्टूबर", "26 जनवरी", "14 नवंबर"], correct: "Jan 26" },
-                        { question: "Governor Appointed by?", questionHi: "राज्यपाल की नियुक्ति?", options: ["PM", "CM", "President", "CJ"], optionsHi: ["पीएम", "सीएम", "राष्ट्रपति", "सीजे"], correct: "President" },
-                        { question: "President Term?", questionHi: "राष्ट्रपति कार्यकाल?", options: ["4", "5", "6", "7"], optionsHi: ["4", "5", "6", "7"], correct: "5" },
-                        { question: "Lower House?", questionHi: "निचला सदन?", options: ["Rajya", "Lok", "Vidhan", "Parishad"], optionsHi: ["राज्य", "लोक", "विधान", "परिषद"], correct: "Lok" },
-                        { question: "Nalanda University State?", questionHi: "नालंदा विश्वविद्यालय राज्य?", options: ["UP", "Bihar", "MP", "Bengal"], optionsHi: ["यूपी", "बिहार", "एमपी", "बंगाल"], correct: "Bihar" },
-                        { question: "Shuttlecock sport?", questionHi: "शटलकॉक खेल?", options: ["Tennis", "Table Tennis", "Badminton", "Squash"], optionsHi: ["टेनिस", "टेबल टेनिस", "बैडमिंटन", "स्क्वैश"], correct: "Badminton" },
-                        { question: "Rainbow colors?", questionHi: "इंद्रधनुष के रंग?", options: ["5", "6", "7", "8"], optionsHi: ["5", "6", "7", "8"], correct: "7" },
-                        { question: "Temp Instrument?", questionHi: "तापमान यंत्र?", options: ["Barometer", "Thermometer", "Lactometer", "Voltmeter"], optionsHi: ["बैरोमीटर", "थर्मामीटर", " लैक्टोमीटर", "वोल्टमीटर"], correct: "Thermometer" },
-                        { question: "Ramayana Author?", questionHi: "रामायण रचयिता?", options: ["Vyas", "Valmiki", "Tulsidas", "Kalidas"], optionsHi: ["व्यास", "वाल्मीकि", "तुलसीदास", "कालिदास"], correct: "Valmiki" },
-                        { question: "Hardest Body Part?", questionHi: "शरीर का सबसे कठोर भाग?", options: ["Bone", "Enamel", "Skull", "Nail"], optionsHi: ["हड्डी", "इनेमल", "खोपड़ी", "नाखून"], correct: "Enamel" }
-                    ])
-                },
-                test4: {
-                    title: "Test 4: Tech & World",
-                    titleHi: "टेस्ट 4: तकनीक और दुनिया",
-                    description: "Computers, Internet, World Organizations & Logic",
-                    descriptionHi: "कंप्यूटर, इंटरनेट, विश्व संगठन और तर्क",
-                    questions: generateQuestions(151, [
-                        { question: "WHO Headquarters?", questionHi: "डब्ल्यूएचओ (WHO) मुख्यालय?", options: ["NY", "Geneva", "Paris", "London"], optionsHi: ["एनवाई", "जिनेवा", "पेरिस", "लंदन"], correct: "Geneva" },
-                        { question: "UK Currency?", questionHi: "यूके मुद्रा?", options: ["Dollar", "Euro", "Pound", "Yen"], optionsHi: ["डॉलर", "यूरो", "पाउंड", "येन"], correct: "Pound" },
-                        { question: "White Elephants Land?", questionHi: "सफेद हाथियों की भूमि?", options: ["India", "Thailand", "Lanka", "Myanmar"], optionsHi: ["भारत", "थाईलैंड", "लंका", "म्यांमार"], correct: "Thailand" },
-                        { question: "Largest Ocean?", questionHi: "सबसे बड़ा महासागर?", options: ["Atlantic", "Indian", "Pacific", "Arctic"], optionsHi: ["अटलांटिक", "हिंद", "प्रशांत", "आर्कटिक"], correct: "Pacific" },
-                        { question: "UK PM 2024?", questionHi: "यूके पीएम 2024?", options: ["Sunak", "Johnson", "Starmer", "Truss"], optionsHi: ["सुनक", "जॉनसन", "स्टार्मर", "ट्रस"], correct: "Starmer" },
-                        { question: "Maple Leaf Flag?", questionHi: "मेपल लीफ झंडा?", options: ["USA", "Canada", "Australia", "NZ"], optionsHi: ["यूएसए", "कनाडा", "ऑस्ट्रेलिया", "एनजेड"], correct: "Canada" },
-                        { question: "France Capital?", questionHi: "फ्रांस की राजधानी?", options: ["Rome", "Berlin", "Madrid", "Paris"], optionsHi: ["रोम", "बर्लिन", "मैड्रिड", "पेरिस"], correct: "Paris" },
-                        { question: "Smallest Continent?", questionHi: "सबसे छोटा महाद्वीप?", options: ["Europe", "Antarctica", "S America", "Australia"], optionsHi: ["यूरोप", "अंटार्कटिका", "द. अमेरिका", "ऑस्ट्रेलिया"], correct: "Australia" },
-                        { question: "Pyramids Country?", questionHi: "पिरामिड देश?", options: ["Egypt", "Mexico", "Sudan", "Iraq"], optionsHi: ["मिस्र", "मेक्सिको", "सूडान", "इराक"], correct: "Egypt" },
-                        { question: "Big Apple City?", questionHi: "बिग एप्पल शहर?", options: ["LA", "NYC", "Chicago", "Miami"], optionsHi: ["एलए", "एनवाईसी", "शिकागो", "मियामी"], correct: "NYC" },
-                        { question: "Microsoft Founder?", questionHi: "माइक्रोसॉफ्ट संस्थापक?", options: ["Jobs", "Gates", "Zuckerberg", "Bezos"], optionsHi: ["जॉब्स", "गेट्स", "जकरबर्ग", "बेजोस"], correct: "Gates" },
-                        { question: "RAM stands for?", questionHi: "RAM का मतलब?", options: ["Read Access", "Random Access", "Run Access", "Real Access"], optionsHi: ["रीड एक्सेस", "रैंडम एक्सेस", "रन एक्सेस", "रियल एक्सेस"], correct: "Random Access" },
-                        { question: "iPhone Company?", questionHi: "iPhone कंपनी?", options: ["Samsung", "Google", "Apple", "Nokia"], optionsHi: ["सैमसंग", "गूगल", "एप्पल", "नोकिया"], correct: "Apple" },
-                        { question: "PDF stands for?", questionHi: "PDF का मतलब?", options: ["Portable Document", "Public Doc", "Print Doc", "Personal File"], optionsHi: ["पोर्टेबल डॉक्यूमेंट", "पब्लिक डॉक", "प्रिंट डॉक", "पर्सनल फाइल"], correct: "Portable Document" },
-                        { question: "Refresh Key?", questionHi: "रिफ्रेश कुंजी?", options: ["F1", "F5", "F12", "Esc"], optionsHi: ["F1", "F5", "F12", "Esc"], correct: "F5" },
-                        { question: "Tesla CEO?", questionHi: "टेस्ला सीईओ?", options: ["Musk", "Cook", "Pichai", "Nadella"], optionsHi: ["मस्क", "कुक", "पिचाई", "नडेला"], correct: "Musk" },
-                        { question: "Ghost Logo App?", questionHi: "घोस्ट लोगो ऐप?", options: ["Insta", "Snapchat", "Twitter", "FB"], optionsHi: ["इंस्टा", "स्नैपचैट", "ट्विटर", "एफबी"], correct: "Snapchat" },
-                        { question: "AI stands for?", questionHi: "AI का मतलब?", options: ["Artificial Intel", "Auto Input", "Applied Inn", "Adv Interface"], optionsHi: ["आर्टिफिशियल इंटेलिजेंस", "ऑटो इनपुट", "एप्लाइड इन", "एडवांस इंटरफेस"], correct: "Artificial Intel" },
-                        { question: "1024 KB is?", questionHi: "1024 KB है?", options: ["1 GB", "1 MB", "1 TB", "1 Byte"], optionsHi: ["1 GB", "1 MB", "1 TB", "1 Byte"], correct: "1 MB" },
-                        { question: "Typing Device?", questionHi: "टाइपिंग डिवाइस?", options: ["Monitor", "Printer", "Keyboard", "Speaker"], optionsHi: ["मॉनिटर", "प्रिंटर", "कीबोर्ड", "स्पीकर"], correct: "Keyboard" },
-                        { question: "Chess Squares?", questionHi: "शतरंज के खाने?", options: ["60", "62", "64", "66"], optionsHi: ["60", "62", "64", "66"], correct: "64" },
-                        { question: "God of Cricket?", questionHi: "क्रिकेट के भगवान?", options: ["Kohli", "Dhoni", "Tendulkar", "Kapil"], optionsHi: ["कोहली", "धोनी", "तेंदुलकर", "कपिल"], correct: "Tendulkar" },
-                        { question: "FIFA 2022 Winner?", questionHi: "फीफा 2022 विजेता?", options: ["France", "Brazil", "Argentina", "Germany"], optionsHi: ["फ्रांस", "ब्राजील", "अर्जेंटीना", "जर्मनी"], correct: "Argentina" },
-                        { question: "Checkmate game?", questionHi: "चेकमेट खेल?", options: ["Cricket", "Chess", "Hockey", "Football"], optionsHi: ["क्रिकेट", "शतरंज", "हॉकी", "फुटबॉल"], correct: "Chess" },
-                        { question: "Fastest Man?", questionHi: "सबसे तेज आदमी?", options: ["Bolt", "Lewis", "Gay", "Blake"], optionsHi: ["बोल्ट", "लुईस", "गे", "ब्लेक"], correct: "Bolt" },
-                        { question: "Basket Game?", questionHi: "बास्केट वाला खेल?", options: ["Volleyball", "Basketball", "Football", "Tennis"], optionsHi: ["वॉलीबॉल", "बास्केटबॉल", "फुटबॉल", "टेनिस"], correct: "Basketball" },
-                        { question: "Kabaddi Players?", questionHi: "कबड्डी खिलाड़ी?", options: ["5", "6", "7", "8"], optionsHi: ["5", "6", "7", "8"], correct: "7" },
-                        { question: "Wimbledon Sport?", questionHi: "विंबलडन खेल?", options: ["Cricket", "Football", "Tennis", "Badminton"], optionsHi: ["क्रिकेट", "फुटबॉल", "टेनिस", "बैडमिंटन"], correct: "Tennis" },
-                        { question: "Neeraj Chopra Sport?", questionHi: "नीरज चोपड़ा खेल?", options: ["Wrestling", "Boxing", "Javelin", "Shooting"], optionsHi: ["कुश्ती", "मुक्केबाजी", "भाला", "शूटिंग"], correct: "Javelin" },
-                        { question: "2028 Olympics?", questionHi: "2028 ओलंपिक?", options: ["Paris", "LA", "Brisbane", "Tokyo"], optionsHi: ["पेरिस", "लॉस एंजिल्स", "ब्रिस्बेन", "टोक्यो"], correct: "LA" },
-                        { question: "Gitanjali Author?", questionHi: "गीतांजलि लेखक?", options: ["Tagore", "Bankim", "Premchand", "Sarojini"], optionsHi: ["टैगोर", "बंकिम", "प्रेमचंद", "सरोजिनी"], correct: "Tagore" },
-                        { question: "Longest Epic?", questionHi: "सबसे लंबा महाकाव्य?", options: ["Iliad", "Odyssey", "Mahabharata", "Ramayana"], optionsHi: ["इलियाड", "ओडिसी", "महाभारत", "रामायण"], correct: "Mahabharata" },
-                        { question: "God of Small Things?", questionHi: "गॉड ऑफ स्मॉल थिंग्स?", options: ["Roy", "Lahiri", "Seth", "Bhagat"], optionsHi: ["रॉय", "लाहिड़ी", "सेठ", "भगत"], correct: "Roy" },
-                        { question: "221B Baker St?", questionHi: "221बी बेकर स्ट्रीट?", options: ["Potter", "Holmes", "Bond", "Poirot"], optionsHi: ["पॉटर", "होम्स", "बॉन्ड", "पोयरोट"], correct: "Holmes" },
-                        { question: "Wings of Fire?", questionHi: "विंग्स ऑफ फायर?", options: ["Gandhi", "Nehru", "Kalam", "Tendulkar"], optionsHi: ["गांधी", "नेहरू", "कलाम", "तेंदुलकर"], correct: "Kalam" },
-                        { question: "National Bird?", questionHi: "राष्ट्रीय पक्षी?", options: ["Peacock", "Eagle", "Parrot", "Swan"], optionsHi: ["मोर", "ईगल", "तोता", "हंस"], correct: "Peacock" },
-                        { question: "End of Ramadan?", questionHi: "रमजान का अंत?", options: ["Diwali", "Eid", "Xmas", "Holi"], optionsHi: ["दिवाली", "ईद", "क्रिसमस", "होली"], correct: "Eid" },
-                        { question: "Bihu Dance?", questionHi: "बिहू नृत्य?", options: ["Punjab", "Assam", "Gujarat", "Kerala"], optionsHi: ["पंजाब", "असम", "गुजरात", "केरल"], correct: "Assam" },
-                        { question: "Starry Night Painter?", questionHi: "स्टारी नाइट चित्रकार?", options: ["Picasso", "Van Gogh", "Da Vinci", "Rembrandt"], optionsHi: ["पिकासो", "वैन गॉग", "दा विंची", "रेम्ब्रांट"], correct: "Van Gogh" },
-                        { question: "Bismillah Khan Instrument?", questionHi: "बिस्मिल्लाह खान वाद्य?", options: ["Sitar", "Tabla", "Shehnai", "Flute"], optionsHi: ["सितार", "तबला", "शहनाई", "बांसुरी"], correct: "Shehnai" },
-                        { question: "Red + Yellow?", questionHi: "लाल + पीला?", options: ["Green", "Purple", "Orange", "Brown"], optionsHi: ["हरा", "बैंगनी", "नारंगी", "भूरा"], correct: "Orange" },
-                        { question: "First Day of Week?", questionHi: "सप्ताह का पहला दिन?", options: ["Sat", "Sun", "Mon", "Tue"], optionsHi: ["शनि", "रवि", "सोम", "मंगल"], correct: "Sun" },
-                        { question: "Hexagon Sides?", questionHi: "षट्भुज भुजाएँ?", options: ["5", "6", "7", "8"], optionsHi: ["5", "6", "7", "8"], correct: "6" },
-                        { question: "Ramanujan Number?", questionHi: "रामानुजन संख्या?", options: ["1729", "100", "3.14", "0"], optionsHi: ["1729", "100", "3.14", "0"], correct: "1729" },
-                        { question: "Sqrt 144?", questionHi: "144 का वर्गमूल?", options: ["10", "11", "12", "13"], optionsHi: ["10", "11", "12", "13"], correct: "12" },
-                        { question: "Tree release day?", questionHi: "पेड़ दिन में छोड़ते हैं?", options: ["CO2", "Oxygen", "Nitrogen", "Methane"], optionsHi: ["CO2", "ऑक्सीजन", "नाइट्रोजन", "मीथेन"], correct: "Oxygen" },
-                        { question: "Fastest Land Animal?", questionHi: "सबसे तेज जानवर?", options: ["Lion", "Tiger", "Cheetah", "Leopard"], optionsHi: ["शेर", "बाघ", "चीता", "तेंदुआ"], correct: "Cheetah" },
-                        { question: "Years in Millennium?", questionHi: "सहस्राब्दी में वर्ष?", options: ["100", "500", "1000", "10000"], optionsHi: ["100", "500", "1000", "10000"], correct: "1000" },
-                        { question: "Universal Donor?", questionHi: "सर्वदाता?", options: ["A+", "B+", "AB+", "O-"], optionsHi: ["A+", "B+", "AB+", "O-"], correct: "O-" },
-                        { question: "Father of Nation?", questionHi: "राष्ट्रपिता?", options: ["Nehru", "Ambedkar", "Gandhi", "Patel"], optionsHi: ["नेहरू", "अंबेडकर", "गांधी", "पटेल"], correct: "Gandhi" }
-                    ])
-                },
-                test5: {
-                    title: "Test 5: Environment & Science",
-                    titleHi: "टेस्ट 5: पर्यावरण और विज्ञान",
-                    description: "Ecology, Physics, Biology & Chemistry Basics",
-                    descriptionHi: "पारिस्थितिकी, भौतिकी, जीव विज्ञान और रसायन विज्ञान मूल बातें",
-                    questions: generateQuestions(201, [
-                        { question: "World Environment Day?", questionHi: "विश्व पर्यावरण दिवस?", options: ["June 5", "April 22", "March 8", "Dec 1"], optionsHi: ["5 जून", "22 अप्रैल", "8 मार्च", "1 दिसंबर"], correct: "June 5" },
-                        { question: "Gas causing Global Warming?", questionHi: "ग्लोबल वार्मिंग गैस?", options: ["Oxygen", "CO2", "Nitrogen", "Argon"], optionsHi: ["ऑक्सीजन", "CO2", "नाइट्रोजन", "आर्गन"], correct: "CO2" },
-                        { question: "Panda's food?", questionHi: "पांडा का भोजन?", options: ["Bamboo", "Fish", "Insects", "Grass"], optionsHi: ["बांस", "मछली", "कीड़े", "घास"], correct: "Bamboo" },
-                        { question: "Largest Mammal?", questionHi: "सबसे बड़ा स्तनपायी?", options: ["Elephant", "Blue Whale", "Giraffe", "Rhino"], optionsHi: ["हाथी", "ब्लू व्हेल", "जिराफ", "गेंडा"], correct: "Blue Whale" },
-                        { question: "Sound travels fastest in?", questionHi: "ध्वनि सबसे तेज चलती है?", options: ["Vacuum", "Air", "Water", "Steel"], optionsHi: ["निर्वात", "हवा", "पानी", "स्टील"], correct: "Steel" },
-                        { question: "Force unit?", questionHi: "बल की इकाई?", options: ["Joule", "Newton", "Watt", "Pascal"], optionsHi: ["जूल", "न्यूटन", "वाट", "पास्कल"], correct: "Newton" },
-                        { question: "Chemical symbol for Iron?", questionHi: "लोहे का प्रतीक?", options: ["Fe", "Ir", "In", "I"], optionsHi: ["Fe", "Ir", "In", "I"], correct: "Fe" },
-                        { question: "PH of Water?", questionHi: "पानी का पीएच?", options: ["5", "7", "9", "12"], optionsHi: ["5", "7", "9", "12"], correct: "7" },
-                        { question: "Hardest substance?", questionHi: "सबसे कठोर पदार्थ?", options: ["Gold", "Diamond", "Steel", "Iron"], optionsHi: ["सोना", "हीरा", "स्टील", "लोहा"], correct: "Diamond" },
-                        { question: "Study of plants?", questionHi: "पौधों का अध्ययन?", options: ["Zoology", "Botany", "Geology", "Chemistry"], optionsHi: ["जूलॉजी", "बॉटनी", "जियोलॉजी", "केमिस्ट्री"], correct: "Botany" },
-                        { question: "Animal that sleeps standing?", questionHi: "खड़े होकर सोने वाला जानवर?", options: ["Dog", "Horse", "Cat", "Lion"], optionsHi: ["कुत्ता", "घोड़ा", "बिल्ली", "शेर"], correct: "Horse" },
-                        { question: "Fastest Bird?", questionHi: "सबसे तेज पक्षी?", options: ["Eagle", "Falcon", "Owl", "Parrot"], optionsHi: ["ईगल", "फाल्कन", "उल्लू", "तोता"], correct: "Falcon" },
-                        { question: "Only flying mammal?", questionHi: "उड़ने वाला एकमात्र स्तनपायी?", options: ["Bat", "Squirrel", "Rat", "Cat"], optionsHi: ["चमगादड़", "गिलहरी", "चूहा", "बिल्ली"], correct: "Bat" },
-                        { question: "Tallest Grass?", questionHi: "सबसे लंबी घास?", options: ["Wheat", "Bamboo", "Rice", "Cane"], optionsHi: ["गेहूं", "बांस", "चावल", "गन्ना"], correct: "Bamboo" },
-                        { question: "Rainbow colors count?", questionHi: "इंद्रधनुष रंगों की संख्या?", options: ["5", "7", "9", "6"], optionsHi: ["5", "7", "9", "6"], correct: "7" },
-                        { question: "Closest Star?", questionHi: "सबसे निकट का तारा?", options: ["Alpha Centauri", "Proxima Centauri", "Sun", "Sirius"], optionsHi: ["अल्फा सेंटॉरी", "प्रोक्सिमा सेंटॉरी", "सूर्य", "सीरियस"], correct: "Sun" },
-                        { question: "Mars Moons count?", questionHi: "मंगल के चंद्रमा?", options: ["1", "2", "3", "4"], optionsHi: ["1", "2", "3", "4"], correct: "2" },
-                        { question: "Hottest Planet?", questionHi: "सबसे गर्म ग्रह?", options: ["Mercury", "Venus", "Mars", "Jupiter"], optionsHi: ["बुध", "शुक्र", "मंगल", "बृहस्पति"], correct: "Venus" },
-                        { question: "Main gas in Sun?", questionHi: "सूर्य में मुख्य गैस?", options: ["Oxygen", "Hydrogen", "Helium", "Nitrogen"], optionsHi: ["ऑक्सीजन", "हाइड्रोजन", "हीलियम", "नाइट्रोजन"], correct: "Hydrogen" },
-                        { question: "Galaxy shape?", questionHi: "आकाशगंगा का आकार?", options: ["Round", "Spiral", "Square", "Oval"], optionsHi: ["गोल", "सर्पिल", "चौकोर", "अंडाकार"], correct: "Spiral" },
-                        { question: "Penicillin discovery?", questionHi: "पेनिसिलिन की खोज?", options: ["Fleming", "Pasteur", "Curie", "Darwin"], optionsHi: ["फ्लेमिंग", "पाश्चर", "क्यूरी", "डार्विन"], correct: "Fleming" },
-                        { question: "DNA stands for?", questionHi: "DNA का मतलब?", options: ["Deoxyribonucleic Acid", "Dual Acid", "Direct Acid", "Deoxy Acid"], optionsHi: ["डीऑक्सीराइबोन्यूक्लिक एसिड", "डुअल एसिड", "डायरेक्ट एसिड", "डीऑक्सी एसिड"], correct: "Deoxyribonucleic Acid" },
-                        { question: "Blood type universal recipient?", questionHi: "सर्वग्राही रक्त समूह?", options: ["O", "A", "B", "AB"], optionsHi: ["O", "A", "B", "AB"], correct: "AB" },
-                        { question: "Largest bone?", questionHi: "सबसे बड़ी हड्डी?", options: ["Femur", "Tibia", "Skull", "Rib"], optionsHi: ["फीमर", "टिबिया", "खोपड़ी", "रिब"], correct: "Femur" },
-                        { question: "Smallest bone?", questionHi: "सबसे छोटी हड्डी?", options: ["Stapes", "Femur", "Rib", "Skull"], optionsHi: ["स्टेपेज़", "फीमर", "रिब", "खोपड़ी"], correct: "Stapes" },
-                        { question: "Brain of computer?", questionHi: "कंप्यूटर का दिमाग?", options: ["Monitor", "CPU", "RAM", "Mouse"], optionsHi: ["मॉनिटर", "सीपीयू", "रैम", "माउस"], correct: "CPU" },
-                        { question: "1 Byte = ?", questionHi: "1 बाइट = ?", options: ["4 bits", "8 bits", "16 bits", "32 bits"], optionsHi: ["4 बिट्स", "8 बिट्स", "16 बिट्स", "32 बिट्स"], correct: "8 bits" },
-                        { question: "Google founder?", questionHi: "गूगल संस्थापक?", options: ["Gates", "Page & Brin", "Zuckerberg", "Musk"], optionsHi: ["गेट्स", "पेज और ब्रिन", "जकरबर्ग", "मस्क"], correct: "Page & Brin" },
-                        { question: "Social media 'Bird' logo?", questionHi: "सोशल मीडिया 'पक्षी' लोगो?", options: ["Twitter", "FB", "Insta", "Snap"], optionsHi: ["ट्विटर", "एफबी", "इंस्टा", "स्नैप"], correct: "Twitter" },
-                        { question: "Wifi full form?", questionHi: "Wifi का पूर्ण रूप?", options: ["Wireless Fidelity", "Wire Fire", "World Fi", "Web Fi"], optionsHi: ["वायरलेस फिडेलिटी", "वायर फायर", "वर्ल्ड फाई", "वेब फाई"], correct: "Wireless Fidelity" },
-                        { question: "Father of Geometry?", questionHi: "ज्यामिति के जनक?", options: ["Euclid", "Pythagoras", "Newton", "Kepler"], optionsHi: ["यूक्लिड", "पाइथागोरस", "न्यूटन", "केप्लर"], correct: "Euclid" },
-                        { question: "Value of Pi?", questionHi: "पाई का मान?", options: ["3.14", "2.14", "4.14", "3.41"], optionsHi: ["3.14", "2.14", "4.14", "3.41"], correct: "3.14" },
-                        { question: "Triangle sides?", questionHi: "त्रिभुज भुजाएँ?", options: ["3", "4", "5", "6"], optionsHi: ["3", "4", "5", "6"], correct: "3" },
-                        { question: "Octagon sides?", questionHi: "अष्टकोण भुजाएँ?", options: ["6", "7", "8", "9"], optionsHi: ["6", "7", "8", "9"], correct: "8" },
-                        { question: "Zero invented by?", questionHi: "शून्य का आविष्कार?", options: ["Aryabhata", "Newton", "Einstein", "Tesla"], optionsHi: ["आर्यभट्ट", "न्यूटन", "आइंस्टीन", "टेस्ला"], correct: "Aryabhata" },
-                        { question: "Currency of USA?", questionHi: "यूएसए मुद्रा?", options: ["Euro", "Dollar", "Pound", "Yen"], optionsHi: ["यूरो", "डॉलर", "पाउंड", "येन"], correct: "Dollar" },
-                        { question: "Currency of Russia?", questionHi: "रूस की मुद्रा?", options: ["Ruble", "Dollar", "Euro", "Yen"], optionsHi: ["रूबल", "डॉलर", "यूरो", "येन"], correct: "Ruble" },
-                        { question: "Continent with most countries?", questionHi: "सर्वाधिक देशों वाला महाद्वीप?", options: ["Asia", "Africa", "Europe", "America"], optionsHi: ["एशिया", "अफ्रीका", "यूरोप", "अमेरिका"], correct: "Africa" },
-                        { question: "Longest Wall?", questionHi: "सबसे लंबी दीवार?", options: ["China", "Berlin", "India", "USA"], optionsHi: ["चीन", "बर्लिन", "भारत", "यूएसए"], correct: "China" },
-                        { question: "Roof of the World?", questionHi: "दुनिया की छत?", options: ["Tibet", "Nepal", "Andes", "Alps"], optionsHi: ["तिब्बत", "नेपाल", "एंडीज", "आल्प्स"], correct: "Tibet" },
-                        { question: "Land of Midnight Sun?", questionHi: "मध्यरात्रि सूर्य की भूमि?", options: ["Norway", "Japan", "Fiji", "Alaska"], optionsHi: ["नॉर्वे", "जापान", "फिजी", "अलास्का"], correct: "Norway" },
-                        { question: "Sugar Bowl of World?", questionHi: "विश्व का चीनी का कटोरा?", options: ["Cuba", "Brazil", "India", "China"], optionsHi: ["क्यूबा", "ब्राजील", "भारत", "चीन"], correct: "Cuba" },
-                        { question: "Playground of Europe?", questionHi: "यूरोप का खेल का मैदान?", options: ["Switzerland", "Italy", "France", "Spain"], optionsHi: ["स्विट्जरलैंड", "इटली", "फ्रांस", "स्पेन"], correct: "Switzerland" },
-                        { question: "Gift of Nile?", questionHi: "नील का उपहार?", options: ["Egypt", "Sudan", "Kenya", "Libya"], optionsHi: ["मिस्र", "सूडान", "केन्या", "लीबिया"], correct: "Egypt" },
-                        { question: "Land of Kangaroos?", questionHi: "कंगारुओं की भूमि?", options: ["Australia", "NZ", "Africa", "India"], optionsHi: ["ऑस्ट्रेलिया", "एनजेड", "अफ्रीका", "भारत"], correct: "Australia" },
-                        { question: "City of Seven Hills?", questionHi: "सात पहाड़ियों का शहर?", options: ["Rome", "Athens", "Paris", "Delhi"], optionsHi: ["रोम", "एथेंस", "पेरिस", "दिल्ली"], correct: "Rome" },
-                        { question: "Highest Mountain?", questionHi: "सबसे ऊंचा पहाड़?", options: ["K2", "Everest", "Fuji", "Blanc"], optionsHi: ["K2", "एवरेस्ट", "फ़ूजी", "ब्लैंक"], correct: "Everest" },
-                        { question: "Smallest Ocean?", questionHi: "सबसे छोटा महासागर?", options: ["Arctic", "Indian", "Atlantic", "Pacific"], optionsHi: ["आर्कटिक", "हिंद", "अटलांटिक", "प्रशांत"], correct: "Arctic" },
-                        { question: "Largest Lake?", questionHi: "सबसे बड़ी झील?", options: ["Caspian", "Superior", "Victoria", "Baikal"], optionsHi: ["कैस्पियन", "सुपीरियर", "विक्टोरिया", "बैकाल"], correct: "Caspian" },
-                        { question: "Deepest Lake?", questionHi: "सबसे गहरी झील?", options: ["Baikal", "Tanganyika", "Superior", "Vostok"], optionsHi: ["बैकाल", "तंगानिका", "सुपीरियर", "वोस्तोक"], correct: "Baikal" }
-                    ])
-                },
-                test6: {
-                    title: "Test 6: Logic & Culture",
-                    titleHi: "टेस्ट 6: तर्क और संस्कृति",
-                    description: "Mental Ability, Famous Books, Dances & Reasoning",
-                    descriptionHi: "मानसिक क्षमता, प्रसिद्ध पुस्तकें, नृत्य और तर्क",
-                    questions: generateQuestions(251, [
-                        { question: "Find next: 2, 4, 6, 8, ?", questionHi: "अगला खोजें: 2, 4, 6, 8, ?", options: ["9", "10", "11", "12"], optionsHi: ["9", "10", "11", "12"], correct: "10" },
-                        { question: "Odd one out: Apple, Mango, Potato, Banana", questionHi: "विषम चुनें: सेब, आम, आलू, केला", options: ["Apple", "Mango", "Potato", "Banana"], optionsHi: ["सेब", "आम", "आलू", "केला"], correct: "Potato" },
-                        { question: "A is father of B. B is not son. Relation?", questionHi: "A, B का पिता है। B बेटा नहीं है। रिश्ता?", options: ["Daughter", "Son", "Wife", "Mother"], optionsHi: ["बेटी", "बेटा", "पत्नी", "मां"], correct: "Daughter" },
-                        { question: "10, 20, 30, 40, ?", questionHi: "10, 20, 30, 40, ?", options: ["50", "60", "45", "55"], optionsHi: ["50", "60", "45", "55"], correct: "50" },
-                        { question: "Opposite of 'Create'?", questionHi: "'Create' का विलोम?", options: ["Destroy", "Build", "Make", "Form"], optionsHi: ["नष्ट", "निर्माण", "बनाना", "रूप"], correct: "Destroy" },
-                        { question: "Synonym of 'Happy'?", questionHi: "'Happy' का पर्यायवाची?", options: ["Sad", "Joyful", "Angry", "Fear"], optionsHi: ["दुखी", "आनंदित", "गुस्सा", "डर"], correct: "Joyful" },
-                        { question: "Dog : Bark :: Cat : ?", questionHi: "कुत्ता : भौंकना :: बिल्ली : ?", options: ["Roar", "Mew", "Hiss", "Quack"], optionsHi: ["दहाड़", "म्याऊ", "फुफकार", "क्वाक"], correct: "Mew" },
-                        { question: "Doctor : Hospital :: Teacher : ?", questionHi: "डॉक्टर : अस्पताल :: शिक्षक : ?", options: ["School", "Court", "Field", "Office"], optionsHi: ["स्कूल", "कोर्ट", "मैदान", "दफ्तर"], correct: "School" },
-                        { question: "Pen : Write :: Knife : ?", questionHi: "पेन : लिखना :: चाकू : ?", options: ["Cut", "Eat", "Sleep", "Run"], optionsHi: ["काटना", "खाना", "सोना", "दौड़ना"], correct: "Cut" },
-                        { question: "Which is a prime number?", questionHi: "अभाज्य संख्या कौन सी है?", options: ["4", "9", "7", "12"], optionsHi: ["4", "9", "7", "12"], correct: "7" },
-                        { question: "Cube of 3?", questionHi: "3 का घन?", options: ["6", "9", "27", "18"], optionsHi: ["6", "9", "27", "18"], correct: "27" },
-                        { question: "Square of 5?", questionHi: "5 का वर्ग?", options: ["10", "20", "25", "15"], optionsHi: ["10", "20", "25", "15"], correct: "25" },
-                        { question: "Days in Leap Year?", questionHi: "लीप वर्ष में दिन?", options: ["365", "366", "364", "360"], optionsHi: ["365", "366", "364", "360"], correct: "366" },
-                        { question: "Hours in a day?", questionHi: "एक दिन में घंटे?", options: ["12", "20", "24", "48"], optionsHi: ["12", "20", "24", "48"], correct: "24" },
-                        { question: "Minutes in hour?", questionHi: "घंटे में मिनट?", options: ["60", "100", "30", "50"], optionsHi: ["60", "100", "30", "50"], correct: "60" },
-                        { question: "Author of 'Hamlet'?", questionHi: "'हेमलेट' के लेखक?", options: ["Shakespeare", "Milton", "Dante", "Homer"], optionsHi: ["शेक्सपियर", "मिल्टन", "दांते", "होमर"], correct: "Shakespeare" },
-                        { question: "Author of 'Godan'?", questionHi: "'गोदान' के लेखक?", options: ["Premchand", "Tagore", "Prasad", "Nirala"], optionsHi: ["प्रेमचंद", "टैगोर", "प्रसाद", "निराला"], correct: "Premchand" },
-                        { question: "Author of 'Guide'?", questionHi: "'गाइड' के लेखक?", options: ["RK Narayan", "Ruskin Bond", "Khushwant", "Anand"], optionsHi: ["आरके नारायण", "रस्किन बॉन्ड", "खुशवंत", "आनंद"], correct: "RK Narayan" },
-                        { question: "War and Peace Author?", questionHi: "वॉर एंड पीस लेखक?", options: ["Tolstoy", "Dostoevsky", "Chekhov", "Gorky"], optionsHi: ["टॉलस्टॉय", "दस्तोवस्की", "चेखोव", "गोर्की"], correct: "Tolstoy" },
-                        { question: "3 Idiots Book?", questionHi: "3 इडियट्स किताब?", options: ["5 Point Someone", "2 States", "Half GF", "Rev 2020"], optionsHi: ["5 पॉइंट समवन", "2 स्टेट्स", "हाफ जीएफ", "रेव 2020"], correct: "5 Point Someone" },
-                        { question: "Classical Dance of TN?", questionHi: "TN का शास्त्रीय नृत्य?", options: ["Bharatanatyam", "Kathak", "Odissi", "Manipuri"], optionsHi: ["भरतनाट्यम", "कथक", "ओडिसी", "मणिपुरी"], correct: "Bharatanatyam" },
-                        { question: "Dance of Kerala?", questionHi: "केरल का नृत्य?", options: ["Kathakali", "Bhangra", "Garba", "Rouf"], optionsHi: ["कथकली", "भांगड़ा", "गरबा", "रौफ"], correct: "Kathakali" },
-                        { question: "Dance of Punjab?", questionHi: "पंजाब का नृत्य?", options: ["Bhangra", "Kathak", "Kuchipudi", "Sattriya"], optionsHi: ["भांगड़ा", "कथक", "कुचिपुड़ी", "सत्रिया"], correct: "Bhangra" },
-                        { question: "Dance of Gujarat?", questionHi: "गुजरात का नृत्य?", options: ["Garba", "Bihu", "Chhau", "Ghoomar"], optionsHi: ["गरबा", "बिहू", "छऊ", "घूमर"], correct: "Garba" },
-                        { question: "Dance of Assam?", questionHi: "असम का नृत्य?", options: ["Bihu", "Lavani", "Tamasha", "Yakshagana"], optionsHi: ["बिहू", "लावणी", "तमाशा", "यक्षगान"], correct: "Bihu" },
-                        { question: "Largest String Instrument?", questionHi: "सबसे बड़ा तार वाद्य?", options: ["Violin", "Double Bass", "Cello", "Viola"], optionsHi: ["वायलिन", "डबल बास", "सेलो", "वियोला"], correct: "Double Bass" },
-                        { question: "Pandit Ravi Shankar plays?", questionHi: "रवि शंकर बजाते हैं?", options: ["Sitar", "Tabla", "Flute", "Sarod"], optionsHi: ["सितार", "तबला", "बांसुरी", "सरोद"], correct: "Sitar" },
-                        { question: "Zakir Hussain plays?", questionHi: "जाकिर हुसैन बजाते हैं?", options: ["Tabla", "Piano", "Guitar", "Drum"], optionsHi: ["तबला", "पियानो", "गिटार", "ड्रम"], correct: "Tabla" },
-                        { question: "Hariprasad Chaurasia plays?", questionHi: "हरिप्रसाद चौरसिया बजाते हैं?", options: ["Flute", "Violin", "Veena", "Santoor"], optionsHi: ["बांसुरी", "वायलिन", "वीणा", "संतूर"], correct: "Flute" },
-                        { question: "National Song Vande Mataram?", questionHi: "राष्ट्रीय गीत वंदे मातरम?", options: ["Chatterjee", "Tagore", "Iqbal", "Prasad"], optionsHi: ["चटर्जी", "टैगोर", "इकबाल", "प्रसाद"], correct: "Chatterjee" },
-                        { question: "Sare Jahan Se Achha?", questionHi: "सारे जहां से अच्छा?", options: ["Iqbal", "Ghalib", "Faiz", "Manto"], optionsHi: ["इकबाल", "गालिब", "फैज", "मंटो"], correct: "Iqbal" },
-                        { question: "Currency of UK?", questionHi: "यूके की मुद्रा?", options: ["Pound", "Euro", "Dollar", "Franc"], optionsHi: ["पाउंड", "यूरो", "डॉलर", "फ्रैंक"], correct: "Pound" },
-                        { question: "Currency of China?", questionHi: "चीन की मुद्रा?", options: ["Yuan", "Yen", "Won", "Baht"], optionsHi: ["युआन", "येन", "वॉन", "बात"], correct: "Yuan" },
-                        { question: "Currency of Bangladesh?", questionHi: "बांग्लादेश की मुद्रा?", options: ["Taka", "Rupee", "Kyat", "Ringgit"], optionsHi: ["टका", "रुपया", "क्याट", "रिंगिट"], correct: "Taka" },
-                        { question: "Capital of Canada?", questionHi: "कनाडा की राजधानी?", options: ["Ottawa", "Toronto", "Vancouver", "Montreal"], optionsHi: ["ओटावा", "टोरंटो", "वैंकूवर", "मॉन्ट्रियल"], correct: "Ottawa" },
-                        { question: "Capital of Russia?", questionHi: "रूस की राजधानी?", options: ["Moscow", "St Petersburg", "Kazan", "Sochi"], optionsHi: ["मास्को", "सेंट पीटर्सबर्ग", "कज़ान", "सोची"], correct: "Moscow" },
-                        { question: "Capital of Germany?", questionHi: "जर्मनी की राजधानी?", options: ["Berlin", "Munich", "Frankfurt", "Hamburg"], optionsHi: ["बर्लिन", "म्यूनिख", "फ्रैंकफर्ट", "हैम्बर्ग"], correct: "Berlin" },
-                        { question: "Capital of Italy?", questionHi: "इटली की राजधानी?", options: ["Rome", "Milan", "Venice", "Naples"], optionsHi: ["रोम", "मिलान", "वेनिस", "नेपल्स"], correct: "Rome" },
-                        { question: "Largest Religion?", questionHi: "सबसे बड़ा धर्म?", options: ["Christianity", "Islam", "Hinduism", "Buddhism"], optionsHi: ["ईसाई", "इस्लाम", "हिंदू", "बौद्ध"], correct: "Christianity" },
-                        { question: "Oldest Veda?", questionHi: "सबसे पुराना वेद?", options: ["Rigveda", "Samaveda", "Yajurveda", "Atharvaveda"], optionsHi: ["ऋग्वेद", "सामवेद", "यजुर्वेद", "अथर्ववेद"], correct: "Rigveda" },
-                        { question: "Festival of Colors?", questionHi: "रंगों का त्योहार?", options: ["Holi", "Diwali", "Eid", "Pongal"], optionsHi: ["होली", "दिवाली", "ईद", "पोंगल"], correct: "Holi" },
-                        { question: "Harvest Festival Kerala?", questionHi: "फसल उत्सव केरल?", options: ["Onam", "Pongal", "Bihu", "Lohri"], optionsHi: ["ओणम", "पोंगल", "बिहू", "लोहड़ी"], correct: "Onam" },
-                        { question: "Harvest Festival Tamil Nadu?", questionHi: "फसल उत्सव तमिलनाडु?", options: ["Pongal", "Onam", "Baisakhi", "Makar Sankranti"], optionsHi: ["पोंगल", "ओणम", "बैसाखी", "मकर संक्रांति"], correct: "Pongal" },
-                        { question: "Christmas Date?", questionHi: "क्रिसमस की तारीख?", options: ["Dec 25", "Jan 1", "Nov 25", "Dec 31"], optionsHi: ["25 दिसंबर", "1 जनवरी", "25 नवंबर", "31 दिसंबर"], correct: "Dec 25" },
-                        { question: "Teacher's Day India?", questionHi: "शिक्षक दिवस भारत?", options: ["Sep 5", "Oct 2", "Nov 14", "Jan 26"], optionsHi: ["5 सितंबर", "2 अक्टूबर", "14 नवंबर", "26 जनवरी"], correct: "Sep 5" },
-                        { question: "Children's Day India?", questionHi: "बाल दिवस भारत?", options: ["Nov 14", "Sep 5", "Aug 15", "Jan 30"], optionsHi: ["14 नवंबर", "5 सितंबर", "15 अगस्त", "30 जनवरी"], correct: "Nov 14" },
-                        { question: "Yoga Day?", questionHi: "योग दिवस?", options: ["June 21", "July 1", "Aug 15", "May 1"], optionsHi: ["21 जून", "1 जुलाई", "15 अगस्त", "1 मई"], correct: "June 21" },
-                        { question: "Science Day India?", questionHi: "विज्ञान दिवस भारत?", options: ["Feb 28", "Mar 8", "Apr 22", "May 11"], optionsHi: ["28 फरवरी", "8 मार्च", "22 अप्रैल", "11 मई"], correct: "Feb 28" },
-                        { question: "Women's Day?", questionHi: "महिला दिवस?", options: ["March 8", "Feb 14", "May 10", "June 5"], optionsHi: ["8 मार्च", "14 फरवरी", "10 मई", "5 जून"], correct: "March 8" },
-                        { question: "Labor Day?", questionHi: "मजदूर दिवस?", options: ["May 1", "June 1", "July 1", "Aug 1"], optionsHi: ["1 मई", "1 जून", "1 जुलाई", "1 अगस्त"], correct: "May 1" }
-                    ])
-                }
-            };
-
-            const startTest = (testKey) => {
-                setActiveTestId(testKey);
-                setCurrentView('quiz');
-                setUserAnswers({});
-                setScore(0);
-                setCurrentQuestionIndex(0);
-                setShowReview(false);
-                window.scrollTo(0, 0);
-            };
-
-            const loadAttemptFromHistory = (attempt) => {
-                setActiveTestId(attempt.testId);
-                setUserAnswers(attempt.answers);
-                setScore(attempt.score);
-                setCurrentView('result');
-                setShowReview(true);
-                window.scrollTo(0, 0);
-            };
-
-            const handleAnswer = (questionId, option) => {
-                if (userAnswers[questionId]) return;
-
-                const newAnswers = {
-                    ...userAnswers,
-                    [questionId]: option
-                };
-                setUserAnswers(newAnswers);
-
-                setTimeout(() => {
-                    const questions = tests[activeTestId].questions;
-                    if (currentQuestionIndex < questions.length - 1) {
-                        setCurrentQuestionIndex(prev => prev + 1);
-                    } else {
-                        submitTest(newAnswers);
-                    }
-                }, 1500); 
-            };
-
-            useEffect(() => {
-                let timer;
-                const questions = tests[activeTestId]?.questions;
-                if (!questions) return;
-                
-                const currentQId = questions[currentQuestionIndex]?.id;
-                const isAnswered = !!userAnswers[currentQId];
-
-                // FIX: Only decrease time if it's > 0.
-                if (currentView === 'quiz' && timeLeft > 0 && !isAnswered) {
-                    timer = setTimeout(() => {
-                        setTimeLeft((prev) => prev - 1);
-                    }, 1000);
-                } else if (currentView === 'quiz' && timeLeft === 0 && !isAnswered) {
-                    // Time's up logic
-                    if (currentQuestionIndex < questions.length - 1) {
-                        setCurrentQuestionIndex((prev) => prev + 1);
-                    } else {
-                        submitTest();
-                    }
-                }
-                return () => clearTimeout(timer);
-            }, [timeLeft, currentView, activeTestId, currentQuestionIndex, userAnswers]);
-
-            // Reset timer when question index changes
-            useEffect(() => {
-                setTimeLeft(45);
-            }, [currentQuestionIndex, currentView]);
-
-            const handleNext = () => {
-                const questions = tests[activeTestId].questions;
-                if (currentQuestionIndex < questions.length - 1) {
-                    setCurrentQuestionIndex(prev => prev + 1);
-                }
-            };
-
-            const handlePrev = () => {
-                if (currentQuestionIndex > 0) {
-                    setCurrentQuestionIndex(prev => prev - 1);
-                }
-            };
-
-            const submitTest = (finalAnswers = userAnswers) => {
-                let newScore = 0;
-                const currentQuestions = tests[activeTestId].questions;
-                currentQuestions.forEach(q => {
-                    if (finalAnswers[q.id] === q.correct) {
-                        newScore += 1;
-                    }
-                });
-                setScore(newScore);
-                
-                const attemptData = {
-                    id: Date.now(),
-                    testId: activeTestId,
-                    date: new Date().toISOString(),
-                    score: newScore,
-                    total: currentQuestions.length,
-                    answers: finalAnswers
-                };
-                
-                const newHistory = [attemptData, ...testHistory];
-                setTestHistory(newHistory);
-                localStorage.setItem('gk_app_history', JSON.stringify(newHistory));
-
-                setCurrentView('result');
-                window.scrollTo(0, 0);
-            };
-
-            const getQuestionStatus = (question) => {
-                const userAnswer = userAnswers[question.id];
-                if (!userAnswer) return 'unanswered';
-                return userAnswer === question.correct ? 'correct' : 'incorrect';
-            };
-
-            const LanguageToggle = () => (
-                <button 
-                    onClick={() => setLanguage(l => l === 'en' ? 'hi' : 'en')}
-                    className="flex items-center gap-2 px-3 py-1 bg-cyan-900/40 text-cyan-300 border border-cyan-500/30 rounded-lg hover:bg-cyan-800/50 transition"
-                >
-                    <Languages className="w-4 h-4" />
-                    <span className="text-sm font-bold uppercase">{language === 'en' ? 'English' : 'हिंदी'}</span>
-                </button>
-            );
-
-            // --- Sub-components moved here but defined as render helpers or just called directly ---
-            // To fix blinking, we avoid defining components inside the main render scope.
-            // We'll just define the JSX blocks directly in the return or use helper functions.
-            
-            return (
-                <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col overflow-hidden relative">
-                    <canvas id="bg-canvas" className="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
-                    
-                    <nav className="bg-gray-950/80 backdrop-blur-md border-b border-cyan-900/30 text-white p-4 shadow-[0_0_15px_rgba(0,0,0,0.5)] z-20 sticky top-0 transition-all">
-                        <div className="max-w-6xl mx-auto flex justify-between items-center">
-                            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setCurrentView('home')}>
-                                <BookOpen className="w-6 h-6 text-cyan-500 group-hover:text-cyan-400 transition transform group-hover:scale-110" />
-                                <span className="font-bold text-xl tracking-wider group-hover:text-cyan-100 transition">GK PORTAL</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <LanguageToggle />
-                                {currentView !== 'home' && (
-                                    <button 
-                                        onClick={() => setCurrentView('home')} 
-                                        className="text-gray-400 hover:text-cyan-400 text-sm font-medium transition flex items-center gap-1 btn-hover-effect"
-                                    >
-                                        <Home className="w-4 h-4" />
-                                        {t(labels.exit.en, labels.exit.hi)}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </nav>
-
-                    <main className="flex-grow py-8 relative z-10">
-                        {currentView === 'home' && (
-                            <div className="max-w-4xl mx-auto p-6 animate-fadeIn">
-                                <div className="text-center mb-12">
-                                    <h1 className="text-4xl font-bold text-cyan-400 mb-4 flex justify-center items-center gap-3 tracking-wider animate-float" style={{ textShadow: '0 0 10px rgba(34, 211, 238, 0.5)' }}>
-                                        <BookOpen className="w-10 h-10" />
-                                        {t(labels.title.en, labels.title.hi)}
-                                    </h1>
-                                    <p className="text-lg text-cyan-100/70 animate-slideIn">{t(labels.subtitle.en, labels.subtitle.hi)}</p>
-                                    
-                                    <button 
-                                        onClick={() => setCurrentView('scorebook')}
-                                        className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-gray-800 border border-cyan-500/30 text-cyan-400 rounded-full hover:bg-cyan-900/20 hover:border-cyan-400 transition-all text-sm font-semibold uppercase tracking-wide btn-hover-effect animate-slideIn"
-                                    >
-                                        <History className="w-4 h-4" />
-                                        {t(labels.myScoreBook.en, labels.myScoreBook.hi)}
-                                    </button>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    {Object.entries(tests).map(([key, test], index) => (
-                                        <div key={key} className="bg-gray-800 rounded-2xl shadow-[0_0_15px_rgba(0,255,255,0.1)] overflow-hidden hover:shadow-[0_0_25px_rgba(0,255,255,0.2)] hover:border-cyan-500/50 border border-gray-700 transition-all duration-300 transform hover:-translate-y-1 animate-slideIn" style={{animationDelay: `${index * 0.1}s`}}>
-                                            <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 border-b border-gray-700">
-                                                <h2 className="text-2xl font-bold mb-2 text-cyan-400">{t(test.title, test.titleHi)}</h2>
-                                                <p className="opacity-90 text-gray-300">{t(test.description, test.descriptionHi)}</p>
-                                            </div>
-                                            <div className="p-6">
-                                                <div className="flex items-center gap-4 mb-6 text-cyan-200/80">
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock className="w-5 h-5 text-cyan-500" />
-                                                        <span>45 {t(labels.mins.en, labels.mins.hi)}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Award className="w-5 h-5 text-cyan-500" />
-                                                        <span>50 {t(labels.questions.en, labels.questions.hi)}</span>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => startTest(key)}
-                                                    className="w-full bg-cyan-600/20 text-cyan-300 border border-cyan-500/50 py-3 rounded-lg font-semibold hover:bg-cyan-500/20 hover:text-cyan-200 hover:shadow-[0_0_10px_rgba(6,182,212,0.4)] transition flex items-center justify-center gap-2 group btn-hover-effect"
-                                                >
-                                                    {t(labels.startTest.en, labels.startTest.hi)}
-                                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-12 bg-gray-800/50 rounded-xl p-8 border border-gray-700 backdrop-blur-sm animate-fadeIn">
-                                    <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
-                                        <Brain className="w-6 h-6 animate-pulse" />
-                                        {t(labels.whyPractice.en, labels.whyPractice.hi)}
-                                    </h3>
-                                    <ul className="grid md:grid-cols-2 gap-4 text-gray-300">
-                                        <li className="flex items-center gap-3">
-                                            <CheckCircle className="w-5 h-5 text-cyan-500" />
-                                            {t(labels.feature1.en, labels.feature1.hi)}
-                                        </li>
-                                        <li className="flex items-center gap-3">
-                                            <CheckCircle className="w-5 h-5 text-cyan-500" />
-                                            {t(labels.feature2.en, labels.feature2.hi)}
-                                        </li>
-                                        <li className="flex items-center gap-3">
-                                            <CheckCircle className="w-5 h-5 text-cyan-500" />
-                                            {t(labels.feature3.en, labels.feature3.hi)}
-                                        </li>
-                                        <li className="flex items-center gap-3">
-                                            <CheckCircle className="w-5 h-5 text-cyan-500" />
-                                            {t(labels.feature4.en, labels.feature4.hi)}
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        )}
-
-                        {currentView === 'scorebook' && (
-                            <div className="max-w-4xl mx-auto p-6 animate-fadeIn">
-                                <div className="text-center mb-12">
-                                    <h1 className="text-3xl font-bold text-cyan-400 mb-2 flex justify-center items-center gap-3">
-                                        <History className="w-8 h-8" />
-                                        {t(labels.scoreBookTitle.en, labels.scoreBookTitle.hi)}
-                                    </h1>
-                                    <p className="text-gray-400">Track your progress and review past attempts</p>
-                                </div>
-
-                                {testHistory.length === 0 ? (
-                                    <div className="text-center py-12 bg-gray-800 rounded-xl border border-gray-700 animate-slideIn">
-                                        <BookOpen className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                                        <p className="text-gray-400 text-lg">{t(labels.noHistory.en, labels.noHistory.hi)}</p>
-                                        <button 
-                                            onClick={() => setCurrentView('home')}
-                                            className="mt-6 px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition btn-hover-effect"
-                                        >
-                                            {t(labels.startTest.en, labels.startTest.hi)}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="grid gap-6">
-                                        {testHistory.map((attempt) => {
-                                            const test = tests[attempt.testId];
-                                            const date = new Date(attempt.date).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-US', {
-                                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                                            });
-                                            const percentage = Math.round((attempt.score / attempt.total) * 100);
-
-                                            return (
-                                                <div key={attempt.id} className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-cyan-500/50 transition-all flex flex-col md:flex-row justify-between items-center gap-6 animate-slideIn">
-                                                    <div className="flex-1">
-                                                        <h3 className="text-xl font-bold text-white mb-1">{t(test.title, test.titleHi)}</h3>
-                                                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                                                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {date}</span>
-                                                            <span className="flex items-center gap-1"><Award className="w-3 h-3" /> {attempt.score}/{attempt.total} Correct</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center gap-6">
-                                                        <div className="text-right">
-                                                            <div className={`text-3xl font-bold ${percentage >= 70 ? 'text-green-400' : 'text-orange-400'}`}>
-                                                                {percentage}%
-                                                            </div>
-                                                            <div className="text-xs text-gray-500 uppercase">Score</div>
-                                                        </div>
-                                                        
-                                                        <button 
-                                                            onClick={() => loadAttemptFromHistory(attempt)}
-                                                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-cyan-300 rounded-lg hover:bg-cyan-900/50 hover:text-cyan-200 transition border border-gray-600 hover:border-cyan-500/50 btn-hover-effect"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                            {t(labels.viewAnalysis.en, labels.viewAnalysis.hi)}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {currentView === 'quiz' && (
-                            <div className="max-w-3xl mx-auto p-4 md:p-6 min-h-[600px] flex flex-col animate-fadeIn">
-                                <div className="mb-8">
-                                    <div className="flex justify-between items-end mb-2">
-                                        <div className="text-cyan-400 text-sm font-mono">
-                                            <span>{t(labels.question.en, labels.question.hi)} {currentQuestionIndex + 1}/{tests[activeTestId].questions.length}</span>
-                                        </div>
-                                        <div className={`flex items-center gap-2 font-mono text-xl font-bold transition-colors ${timeLeft <= 10 && !userAnswers[tests[activeTestId].questions[currentQuestionIndex].id] ? 'text-red-500 animate-pulse' : 'text-cyan-400'}`}>
-                                            <Timer className="w-5 h-5" />
-                                            <span>00:{timeLeft.toString().padStart(2, '0')}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                                        <div 
-                                            className="h-full bg-cyan-500 shadow-[0_0_10px_cyan] transition-all duration-300"
-                                            style={{ width: `${((currentQuestionIndex + 1) / tests[activeTestId].questions.length) * 100}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-gray-800 p-8 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.3)] border border-gray-700 flex-grow flex flex-col justify-center relative overflow-hidden animate-slideIn">
-                                    {timeLeft <= 10 && !userAnswers[tests[activeTestId].questions[currentQuestionIndex].id] && (
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-progress origin-left"></div>
-                                    )}
-                                    
-                                    <h3 className="text-2xl font-bold text-cyan-50 mb-8 leading-relaxed">
-                                        <span className="text-cyan-500 mr-3">
-                                            {tests[activeTestId].questions[currentQuestionIndex].id}.
-                                        </span>
-                                        {t(tests[activeTestId].questions[currentQuestionIndex].question, tests[activeTestId].questions[currentQuestionIndex].questionHi)}
-                                    </h3>
-                                    
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {tests[activeTestId].questions[currentQuestionIndex].options.map((option, index) => {
-                                            const currentQ = tests[activeTestId].questions[currentQuestionIndex];
-                                            const displayText = language === 'hi' && currentQ.optionsHi && currentQ.optionsHi[index] 
-                                                ? currentQ.optionsHi[index] 
-                                                : option;
-
-                                            let optionClass = "bg-gray-700/50 border-gray-600 text-gray-300 hover:border-cyan-500/50 hover:bg-gray-700";
-                                            const isAnswered = !!userAnswers[currentQ.id];
-                                            const userAnswer = userAnswers[currentQ.id];
-                                            
-                                            if (isAnswered) {
-                                                if (option === currentQ.correct) {
-                                                    optionClass = "bg-green-900/40 border-green-500 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]";
-                                                } else if (option === userAnswer && userAnswer !== currentQ.correct) {
-                                                    optionClass = "bg-red-900/40 border-red-500 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]";
-                                                } else {
-                                                    optionClass = "bg-gray-800 border-gray-700 text-gray-500 opacity-50";
-                                                }
-                                            } else if (userAnswer === option) {
-                                                optionClass = 'bg-cyan-900/30 border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]';
-                                            }
-
-                                            return (
-                                                <button
-                                                    key={option}
-                                                    onClick={() => handleAnswer(currentQ.id, option)}
-                                                    disabled={isAnswered}
-                                                    className={`text-left p-4 rounded-xl border-2 transition-all duration-200 text-lg ${optionClass} ${isAnswered ? 'cursor-default' : 'cursor-pointer'}`}
-                                                >
-                                                    <div className="flex justify-between items-center">
-                                                        <span>{displayText}</span>
-                                                        {isAnswered && option === currentQ.correct && <CheckCircle className="w-5 h-5 text-green-500" />}
-                                                        {isAnswered && option === userAnswer && userAnswer !== currentQ.correct && <XCircle className="w-5 h-5 text-red-500" />}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 flex justify-between gap-4">
-                                    <button
-                                        onClick={handlePrev}
-                                        disabled={currentQuestionIndex === 0 || !!userAnswers[tests[activeTestId].questions[currentQuestionIndex].id]}
-                                        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all btn-hover-effect ${
-                                            currentQuestionIndex === 0 || !!userAnswers[tests[activeTestId].questions[currentQuestionIndex].id]
-                                                ? 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700' 
-                                                : 'bg-gray-800 text-cyan-400 hover:bg-gray-700 border border-cyan-500/30 hover:border-cyan-500'
-                                        }`}
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                        {t(labels.previous.en, labels.previous.hi)}
-                                    </button>
-
-                                    {currentQuestionIndex === tests[activeTestId].questions.length - 1 ? (
-                                        <button
-                                            onClick={() => submitTest()}
-                                            disabled={!userAnswers[tests[activeTestId].questions[currentQuestionIndex].id] && Object.keys(userAnswers).length === 0}
-                                            className="flex items-center gap-2 px-8 py-3 bg-cyan-600 text-white rounded-lg font-bold hover:bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all transform btn-hover-effect"
-                                        >
-                                            {t(labels.finish.en, labels.finish.hi)}
-                                            <CheckCircle className="w-5 h-5" />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={handleNext}
-                                            disabled={!!userAnswers[tests[activeTestId].questions[currentQuestionIndex].id]}
-                                            className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-all btn-hover-effect ${
-                                                !!userAnswers[tests[activeTestId].questions[currentQuestionIndex].id] 
-                                                ? 'bg-gray-800 text-gray-500 border border-gray-700 cursor-wait'
-                                                : 'bg-cyan-600/20 text-cyan-300 border border-cyan-500/50 hover:bg-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                                            }`}
-                                        >
-                                            {t(labels.next.en, labels.next.hi)}
-                                            <ChevronRight className="w-5 h-5" />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {currentView === 'result' && (
-                            <div className="max-w-3xl mx-auto p-6 animate-fadeIn">
-                                {!showReview ? (
-                                    <div className="text-center py-12">
-                                        <div className="inline-block p-6 rounded-full bg-gray-800 border-2 border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)] mb-8 animate-float">
-                                            <Trophy className="w-20 h-20 text-cyan-400" />
-                                        </div>
-                                        <h2 className="text-4xl font-bold text-white mb-2">{t(labels.testCompleted.en, labels.testCompleted.hi)}</h2>
-                                        <p className="text-cyan-200/60 mb-12">{t(labels.summary.en, labels.summary.hi)} {t(tests[activeTestId].title, tests[activeTestId].titleHi)}</p>
-                                        
-                                        <div className="grid grid-cols-3 gap-6 max-w-xl mx-auto mb-16 animate-slideIn">
-                                            <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                                                <div className="text-4xl font-bold text-cyan-400 mb-2">{score}</div>
-                                                <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{t(labels.correct.en, labels.correct.hi)}</div>
-                                            </div>
-                                            <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                                                <div className="text-4xl font-bold text-white mb-2">{tests[activeTestId].questions.length}</div>
-                                                <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{t(labels.total.en, labels.total.hi)}</div>
-                                            </div>
-                                            <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                                                <div className={`text-4xl font-bold mb-2 ${Math.round((score / tests[activeTestId].questions.length) * 100) >= 70 ? 'text-green-400' : 'text-orange-400'}`}>
-                                                    {Math.round((score / tests[activeTestId].questions.length) * 100)}%
-                                                </div>
-                                                <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold">{t(labels.score.en, labels.score.hi)}</div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                            <button
-                                                onClick={() => setCurrentView('home')}
-                                                className="flex items-center justify-center gap-2 px-8 py-3 bg-gray-800 text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-700 transition btn-hover-effect"
-                                            >
-                                                <Home className="w-5 h-5" />
-                                                {t(labels.backHome.en, labels.backHome.hi)}
-                                            </button>
-                                            <button
-                                                onClick={() => setShowReview(true)}
-                                                className="flex items-center justify-center gap-2 px-8 py-3 bg-cyan-600/20 text-cyan-300 border border-cyan-500/50 rounded-lg hover:bg-cyan-500/30 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition btn-hover-effect"
-                                            >
-                                                <BookOpen className="w-5 h-5" />
-                                                {t(labels.review.en, labels.review.hi)}
-                                            </button>
-                                            <button
-                                                onClick={() => startTest(activeTestId)}
-                                                className="flex items-center justify-center gap-2 px-8 py-3 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-200 transition btn-hover-effect"
-                                            >
-                                                <RefreshCw className="w-5 h-5" />
-                                                {t(labels.retake.en, labels.retake.hi)}
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className="flex justify-between items-center mb-8 sticky top-0 bg-gray-900/95 backdrop-blur py-6 z-10 border-b border-gray-800">
-                                            <h2 className="text-2xl font-bold text-white">{t(labels.answerKey.en, labels.answerKey.hi)}</h2>
-                                            <div className="flex gap-4">
-                                                <button 
-                                                    onClick={() => setShowReview(false)}
-                                                    className="text-sm text-cyan-400 font-semibold hover:text-cyan-300 flex items-center gap-1 btn-hover-effect"
-                                                >
-                                                    <ArrowLeft className="w-4 h-4" />
-                                                    {t(labels.backScore.en, labels.backScore.hi)}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            {tests[activeTestId].questions.map((q, index) => {
-                                                const userAnsIndex = q.options.indexOf(userAnswers[q.id]);
-                                                const correctAnsIndex = q.options.indexOf(q.correct);
-                                                
-                                                const userAnsDisplay = userAnsIndex !== -1 
-                                                    ? (language === 'hi' && q.optionsHi ? q.optionsHi[userAnsIndex] : q.options[userAnsIndex])
-                                                    : (userAnswers[q.id] || 'Not Answered');
-
-                                                const correctAnsDisplay = correctAnsIndex !== -1
-                                                    ? (language === 'hi' && q.optionsHi ? q.optionsHi[correctAnsIndex] : q.options[correctAnsIndex])
-                                                    : q.correct;
-
-                                                const status = (userAnswers[q.id] === q.correct) ? 'correct' : (userAnswers[q.id] ? 'incorrect' : 'unanswered');
-
-                                                return (
-                                                    <div key={q.id} className={`p-6 rounded-xl border-l-4 shadow-lg bg-gray-800 animate-slideIn ${
-                                                        status === 'correct' ? 'border-l-green-500' : status === 'incorrect' ? 'border-l-red-500' : 'border-l-gray-600'
-                                                    }`} style={{animationDelay: `${index * 0.05}s`}}>
-                                                        <div className="flex items-start gap-4 mb-4">
-                                                            <span className="text-gray-500 font-mono text-sm mt-1">#{index + 1}</span>
-                                                            <div className="flex-1">
-                                                                <p className="font-semibold text-gray-100 text-lg">{t(q.question, q.questionHi)}</p>
-                                                            </div>
-                                                            {status === 'correct' && <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0" />}
-                                                            {status === 'incorrect' && <XCircle className="w-6 h-6 text-red-500 flex-shrink-0" />}
-                                                        </div>
-
-                                                        <div className="ml-8 grid md:grid-cols-2 gap-4 text-sm">
-                                                            <div className="bg-gray-700/50 p-3 rounded-lg border border-gray-700">
-                                                                <span className="text-gray-400 block text-xs uppercase mb-1">{t(labels.yourAns.en, labels.yourAns.hi)}</span>
-                                                                <span className={`font-medium ${
-                                                                    status === 'correct' ? 'text-green-400' : status === 'incorrect' ? 'text-red-400' : 'text-gray-500'
-                                                                }`}>
-                                                                    {userAnsDisplay}
-                                                                </span>
-                                                            </div>
-                                                            <div className="bg-green-900/20 p-3 rounded-lg border border-green-900/30">
-                                                                <span className="text-green-500/80 block text-xs uppercase mb-1">{t(labels.correctAns.en, labels.correctAns.hi)}</span>
-                                                                <span className="font-medium text-green-400">{correctAnsDisplay}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        
-                                        <div className="mt-12 text-center pb-8">
-                                            <button
-                                                onClick={() => setShowReview(false)}
-                                                className="px-8 py-3 bg-cyan-900/30 text-cyan-300 border border-cyan-500/30 rounded-lg hover:bg-cyan-900/50 transition btn-hover-effect"
-                                            >
-                                                {t(labels.returnDash.en, labels.returnDash.hi)}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </main>
-
-                    <footer className="bg-gray-950 border-t border-gray-900 text-gray-500 py-8 mt-auto relative z-10">
-                        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-                            <div className="text-sm">
-                                <p className="font-semibold text-gray-300 text-base mb-1">Created by Vivek Yadav (Rahagir)</p>
-                                <p className="opacity-70">&copy; 2024 Class 8 GK Portal. All Rights Reserved.</p>
-                            </div>
-                            <div className="flex flex-col md:items-end gap-2 text-sm font-medium">
-                                <div className="flex items-center gap-2 justify-center md:justify-end group cursor-pointer">
-                                    <span className="group-hover:scale-110 transition">📞</span>
-                                    <span className="group-hover:text-cyan-400 transition">9995445592</span>
-                                </div>
-                                <div className="flex items-center gap-2 justify-center md:justify-end group cursor-pointer">
-                                    <span className="group-hover:scale-110 transition">✉️</span>
-                                    <a href="mailto:vivek.yadav.25cse@bmu.edu.in" className="group-hover:text-cyan-400 transition">vivek.yadav.25cse@bmu.edu.in</a>
-                                </div>
-                            </div>
-                        </div>
-                    </footer>
+            <!-- Join Form -->
+            <div id="form-join" class="portal-form">
+                <div class="form-group">
+                    <input type="text" id="portal-join-name" placeholder="Workspace Name (e.g. Savera)">
+                    <input type="password" id="portal-join-pass" placeholder="Workspace Password">
+                    <button id="btn-portal-join" class="btn-primary">Enter Workspace</button>
                 </div>
-            );
-        };
+            </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<GKQuizApp />);
-    </script>
+            <!-- Create Form -->
+            <div id="form-create" class="portal-form hidden">
+                <div class="form-group">
+                    <input type="text" id="portal-create-name" placeholder="New Workspace Name">
+                    <input type="password" id="portal-create-pass" placeholder="Set Workspace Password">
+                    <button id="btn-portal-create" class="btn-primary">Initialize & Enter</button>
+                </div>
+            </div>
+
+            <small id="portal-error"
+                style="color: var(--danger); text-align: center; display: block; margin-top: 10px;"></small>
+        </div>
+    </div>
+
+    <!-- 2. Operation View (Partially unchanged but header buttons refined) -->
+    <div id="view-operation" class="operation-container hidden">
+        <div class="operation-header">
+            <button id="btn-exit-workspace" class="btn-secondary btn-sm">🚪 Exit Workspace</button>
+            <h2 id="current-space-title">Workspace Name</h2>
+            <div id="system-status" class="status-badge status-loading">Initializing System...</div>
+        </div>
+
+        <div class="main-container">
+            <!-- Camera Feed -->
+            <div class="camera-wrapper">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="overlay"></canvas>
+                <div id="loading-overlay" class="loading-screen">
+                    <div class="spinner"></div>
+                    <h3 id="loading-text">Loading AI Models...</h3>
+                    <p>Please ensure camera access is granted</p>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="controls-panel">
+                <!-- Dashboard Stats -->
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-label">Date</div>
+                        <div style="font-weight: 600;" id="display-date">--/--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="today-count">0</div>
+                        <div class="stat-label">Present Today</div>
+                    </div>
+                </div>
+
+                <!-- Mode Switcher -->
+                <div class="mode-toggle">
+                    <button id="btn-mode-attend" class="btn-secondary active">Attendance</button>
+                    <button id="btn-mode-reg" class="btn-secondary">Registration</button>
+                    <button id="btn-mode-config" class="btn-secondary">Settings</button>
+                </div>
+
+                <!-- Space Configuration (NEW) -->
+                <div id="config-form" class="form-group hidden">
+                    <h3>Configure Fields</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">Choose what info to collect during
+                        registration</p>
+                    <div class="toggle-group">
+                        <label><input type="checkbox" class="field-toggle" data-field="regNo" checked> Registration
+                            Number</label>
+                        <label><input type="checkbox" class="field-toggle" data-field="course" checked> Course /
+                            Dept</label>
+                        <label><input type="checkbox" class="field-toggle" data-field="phone"> Phone Number</label>
+                    </div>
+                    <button id="btn-save-config" class="btn-primary">Save Settings</button>
+                </div>
+
+                <!-- Registration Form (Dynamic) -->
+                <div id="reg-form" class="form-group hidden">
+                    <h3>Register New Person</h3>
+                    <div id="dynamic-fields-container">
+                        <!-- Dynamic inputs will be injected here -->
+                    </div>
+                    <button id="btn-capture" class="btn-primary">Capture & Register</button>
+                    <small id="reg-feedback" style="text-align: center; color: var(--text-muted);">Look at the camera
+                        clearly</small>
+                </div>
+
+                <!-- Attendance Views -->
+                <div id="attend-info">
+                    <div style="margin-bottom: 15px;">
+                        <div class="list-header">
+                            <span>📋 Today's List</span>
+                            <div style="flex-shrink: 0; display: flex; gap: 8px; align-items: center;">
+                                <span id="scan-indicator"
+                                    style="width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: none; animation: pulse 1s infinite;"></span>
+                                <button id="btn-export" class="btn-export" title="Export to CSV">📥 Export</button>
+                            </div>
+                        </div>
+                        <div class="scrollable-list" id="today-list">
+                            <div style="padding:10px; text-align:center; color:#888;">No attendance yet</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="list-header"><span>⚡ Live Activity</span></div>
+                        <div class="scrollable-list" id="live-logs" style="max-height: 120px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Logic (External) -->
+    <script type="module" src="main.js"></script>
 </body>
+
 </html>
